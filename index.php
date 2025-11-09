@@ -1,4 +1,15 @@
 <?php
+/**
+ * INDEX.PHP - Trang chủ website
+ * 
+ * Hiển thị:
+ * - Hero banner
+ * - Danh mục sản phẩm
+ * - Sản phẩm nổi bật
+ * - Sản phẩm mới nhất
+ * - Lý do chọn Xanh Organic
+ */
+
 require_once 'includes/header.php';
 
 // Lấy sản phẩm nổi bật
@@ -9,13 +20,9 @@ $latest_products = getLatestProducts(8);
 
 // Lấy danh mục
 $categories = getCategories();
-
-// Sửa lỗi Deprecated: Tạo hàm bọc để xử lý NULL trước khi gọi htmlspecialchars
-function safe_html($value) {
-    return htmlspecialchars($value ?? '');
-}
 ?>
 
+<!-- Hero Section -->
 <section class="hero-section">
     <div class="container">
         <div class="hero-content">
@@ -28,8 +35,7 @@ function safe_html($value) {
     </div>
 </section>
 
----
-
+<!-- Categories Section -->
 <section class="categories-section">
     <div class="container">
         <div class="section-title">
@@ -42,15 +48,12 @@ function safe_html($value) {
             <div class="product-card">
                 <div class="product-image">
                     <?php 
-                        // Lấy giá trị cột 'image' từ CSDL một cách an toàn
-                        $image_file = safe_html($category['image']);
+                        // Xử lý đường dẫn ảnh category
+                        $image_src = SITE_URL . '/assets/' . safe_html($category['image'] ?? '');
                         
-                        // TẠO ĐƯỜNG DẪN HOÀN CHỈNH: Thêm tiền tố 'assets/' (nếu cần)
-                        // Giả sử CSDL lưu "images/products/ten_file.jpg" và cần tiền tố "assets/"
-                        $image_src = 'assets/' . $image_file;
-                        
-                        // Nếu trường 'image' trống, dùng ảnh placeholder
-                        if (empty($category['image'])) {
+                        // Kiểm tra file tồn tại
+                        $image_path = __DIR__ . '/assets/' . ($category['image'] ?? '');
+                        if (empty($category['image']) || !file_exists($image_path)) {
                             $image_src = 'https://via.placeholder.com/300x250?text=' . urlencode($category['name']);
                         }
                     ?>
@@ -74,8 +77,7 @@ function safe_html($value) {
     </div>
 </section>
 
----
-
+<!-- Featured Products -->
 <section class="featured-products" style="margin-top: 50px;">
     <div class="container">
         <div class="section-title">
@@ -94,7 +96,13 @@ function safe_html($value) {
                     <?php endif; ?>
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
                         <?php
-                            $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image']);
+                            // Xử lý đường dẫn ảnh sản phẩm
+                            $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image'] ?? '');
+                            $image_path = __DIR__ . '/assets/images/products/' . ($product['image'] ?? '');
+                            
+                            if (empty($product['image']) || !file_exists($image_path)) {
+                                $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
+                            }
                         ?>
                         <img src="<?php echo $image_url; ?>" 
                              alt="<?php echo safe_html($product['name']); ?>">
@@ -103,10 +111,9 @@ function safe_html($value) {
                 <div class="product-info">
                     <div class="product-category">
                         <?php
-                        // Cần đảm bảo $conn được định nghĩa trước đó
-                        $cat_result = $conn->query("SELECT name FROM categories WHERE id = " . $product['category_id']);
-                        $cat = $cat_result->fetch_assoc();
-                        echo safe_html($cat['name']);
+                        // Lấy tên category
+                        $cat = getCategoryById($product['category_id']);
+                        echo safe_html($cat['name'] ?? 'Chưa phân loại');
                         ?>
                     </div>
                     <h3 class="product-name">
@@ -150,8 +157,7 @@ function safe_html($value) {
     </div>
 </section>
 
----
-
+<!-- Latest Products -->
 <section class="latest-products" style="margin-top: 50px; background-color: #f9f9f9; padding: 50px 0;">
     <div class="container">
         <div class="section-title">
@@ -170,7 +176,12 @@ function safe_html($value) {
                     <?php endif; ?>
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
                         <?php
-                            $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image']);
+                            $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image'] ?? '');
+                            $image_path = __DIR__ . '/assets/images/products/' . ($product['image'] ?? '');
+                            
+                            if (empty($product['image']) || !file_exists($image_path)) {
+                                $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
+                            }
                         ?>
                         <img src="<?php echo $image_url; ?>" 
                              alt="<?php echo safe_html($product['name']); ?>">
@@ -179,9 +190,8 @@ function safe_html($value) {
                 <div class="product-info">
                     <div class="product-category">
                         <?php
-                        $cat_result = $conn->query("SELECT name FROM categories WHERE id = " . $product['category_id']);
-                        $cat = $cat_result->fetch_assoc();
-                        echo safe_html($cat['name']);
+                        $cat = getCategoryById($product['category_id']);
+                        echo safe_html($cat['name'] ?? 'Chưa phân loại');
                         ?>
                     </div>
                     <h3 class="product-name">
@@ -219,8 +229,7 @@ function safe_html($value) {
     </div>
 </section>
 
----
-
+<!-- Why Choose Us -->
 <section class="why-choose-us" style="background-color: white; padding: 50px 0; margin-top: 50px;">
     <div class="container">
         <div class="section-title">

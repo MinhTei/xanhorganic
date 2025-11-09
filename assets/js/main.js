@@ -1,253 +1,314 @@
-// JavaScript cho website Xanh Organic
+/**
+ * MAIN.JS - JavaScript chính cho website Xanh Organic
+ * 
+ * Chức năng:
+ * - AJAX thêm vào giỏ hàng
+ * - Back to top button
+ * - Mobile menu
+ * - Dropdown menu
+ */
 
-// Đợi DOM load xong
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Mobile Menu Toggle
-    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-    const navMenu = document.querySelector('.nav-menu');
-    
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-        });
-    }
-    
-    // Back to Top Button
-    const backToTop = document.getElementById('backToTop');
-    
-    if (backToTop) {
-        window.addEventListener('scroll', function() {
-            if (window.scrollY > 300) {
-                backToTop.classList.add('show');
-            } else {
-                backToTop.classList.remove('show');
-            }
-        });
-        
-        backToTop.addEventListener('click', function() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-    }
-    
-    // Dropdown hover (for desktop)
-    const dropdowns = document.querySelectorAll('.dropdown');
-    dropdowns.forEach(dropdown => {
-        dropdown.addEventListener('mouseenter', function() {
-            this.querySelector('.dropdown-menu').style.display = 'block';
-        });
-        
-        dropdown.addEventListener('mouseleave', function() {
-            this.querySelector('.dropdown-menu').style.display = 'none';
-        });
-    });
-    
-});
+// ===== BIẾN TOÀN CỤC =====
+const SITE_URL = window.location.origin + '/xanhorganic'; // Điều chỉnh theo đường dẫn thực tế
 
-// Thêm sản phẩm vào giỏ hàng
+// ===== HÀM THÊM SẢN PHẨM VÀO GIỎ HÀNG BẰNG AJAX =====
+/**
+ * Thêm sản phẩm vào giỏ hàng không reload trang
+ * @param {number} productId - ID sản phẩm
+ * @param {number} quantity - Số lượng (mặc định 1)
+ */
 function addToCart(productId, quantity = 1) {
+    // Tạo FormData
+    const formData = new FormData();
+    formData.append('product_id', productId);
+    formData.append('quantity', quantity);
+    
+    // Hiển thị loading (optional)
+    showLoading();
+    
     // Gửi AJAX request
-    fetch('add-to-cart.php', {
+    fetch(SITE_URL + '/add-to-cart.php', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `product_id=${productId}&quantity=${quantity}`
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
+        hideLoading();
+        
         if (data.success) {
-            // Cập nhật số lượng giỏ hàng
+            // Cập nhật số lượng giỏ hàng trên header
             updateCartCount(data.cart_count);
             
-            // Hiển thị thông báo
-            showNotification('Đã thêm sản phẩm vào giỏ hàng!', 'success');
+            // Hiển thị thông báo thành công
+            showNotification('success', data.message || 'Đã thêm vào giỏ hàng!');
+            
+            // Optional: Hiển thị popup giỏ hàng
+            // showCartPopup();
         } else {
-            showNotification(data.message || 'Có lỗi xảy ra!', 'error');
+            // Hiển thị thông báo lỗi
+            showNotification('error', data.message || 'Có lỗi xảy ra!');
         }
     })
     .catch(error => {
+        hideLoading();
         console.error('Error:', error);
-        showNotification('Có lỗi xảy ra!', 'error');
+        showNotification('error', 'Có lỗi xảy ra. Vui lòng thử lại!');
     });
 }
 
-// Cập nhật số lượng giỏ hàng
+// ===== CẬP NHẬT SỐ LƯỢNG GIỎ HÀNG =====
+/**
+ * Cập nhật số lượng hiển thị trên icon giỏ hàng
+ * @param {number} count - Số lượng sản phẩm
+ */
 function updateCartCount(count) {
-    const cartCountElements = document.querySelectorAll('.cart-count');
-    cartCountElements.forEach(element => {
-        element.textContent = count;
-    });
+    const cartCountElement = document.querySelector('.cart-count');
+    if (cartCountElement) {
+        cartCountElement.textContent = count;
+        
+        // Animation bounce
+        cartCountElement.style.transform = 'scale(1.3)';
+        setTimeout(() => {
+            cartCountElement.style.transform = 'scale(1)';
+        }, 200);
+    }
 }
 
-// Hiển thị thông báo
-function showNotification(message, type = 'info') {
+// ===== HIỂN THỊ THÔNG BÁO =====
+/**
+ * Hiển thị thông báo toast
+ * @param {string} type - Loại thông báo: 'success', 'error', 'warning', 'info'
+ * @param {string} message - Nội dung thông báo
+ */
+function showNotification(type, message) {
     // Tạo element thông báo
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 25px;
-        background: ${type === 'success' ? '#d4edda' : '#f8d7da'};
-        color: ${type === 'success' ? '#155724' : '#721c24'};
-        border: 1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'};
-        border-radius: 5px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        z-index: 9999;
-        animation: slideIn 0.3s ease;
-    `;
-    
     notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        ${message}
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
     `;
     
+    // Thêm vào body
     document.body.appendChild(notification);
+    
+    // Hiển thị với animation
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
     
     // Tự động ẩn sau 3 giây
     setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
+        notification.classList.remove('show');
         setTimeout(() => {
             notification.remove();
         }, 300);
     }, 3000);
 }
 
-// Tăng số lượng sản phẩm
-function increaseQty(btn) {
-    const input = btn.parentElement.querySelector('input[type="number"]');
-    input.value = parseInt(input.value) + 1;
-    input.form.submit();
+// ===== LOADING SPINNER =====
+let loadingElement = null;
+
+function showLoading() {
+    if (!loadingElement) {
+        loadingElement = document.createElement('div');
+        loadingElement.className = 'loading-overlay';
+        loadingElement.innerHTML = '<div class="spinner"></div>';
+        document.body.appendChild(loadingElement);
+    }
+    loadingElement.style.display = 'flex';
 }
 
-// Giảm số lượng sản phẩm
-function decreaseQty(btn) {
-    const input = btn.parentElement.querySelector('input[type="number"]');
-    if (parseInt(input.value) > 1) {
-        input.value = parseInt(input.value) - 1;
-        input.form.submit();
+function hideLoading() {
+    if (loadingElement) {
+        loadingElement.style.display = 'none';
     }
 }
 
-// Xác nhận xóa
-function confirmDelete(message) {
-    return confirm(message || 'Bạn có chắc chắn muốn xóa?');
-}
-
-// Format số tiền
-function formatMoney(amount) {
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-    }).format(amount);
-}
-
-// Validate form
-function validateForm(formId) {
-    const form = document.getElementById(formId);
-    if (!form) return false;
+// ===== BACK TO TOP BUTTON =====
+document.addEventListener('DOMContentLoaded', function() {
+    const backToTopBtn = document.getElementById('backToTop');
     
+    if (backToTopBtn) {
+        // Hiển thị/ẩn nút khi scroll
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+        
+        // Click để scroll lên top
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+});
+
+// ===== MOBILE MENU TOGGLE =====
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (mobileMenuToggle && navMenu) {
+        mobileMenuToggle.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            this.classList.toggle('active');
+        });
+    }
+});
+
+// ===== DROPDOWN MENU =====
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdowns = document.querySelectorAll('.dropdown');
+    
+    dropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector('.dropdown-toggle');
+        const menu = dropdown.querySelector('.dropdown-menu');
+        
+        if (toggle && menu) {
+            // Click để toggle dropdown
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                dropdown.classList.toggle('active');
+            });
+            
+            // Click outside để đóng dropdown
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        }
+    });
+});
+
+// ===== SEARCH BOX ANIMATION =====
+document.addEventListener('DOMContentLoaded', function() {
+    const searchBox = document.querySelector('.search-box input');
+    
+    if (searchBox) {
+        searchBox.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        searchBox.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+        });
+    }
+});
+
+// ===== IMAGE LAZY LOADING =====
+document.addEventListener('DOMContentLoaded', function() {
+    const images = document.querySelectorAll('img[data-src]');
+    
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+                observer.unobserve(img);
+            }
+        });
+    });
+    
+    images.forEach(img => imageObserver.observe(img));
+});
+
+// ===== FORM VALIDATION =====
+/**
+ * Validate form trước khi submit
+ * @param {HTMLFormElement} form - Form element
+ * @returns {boolean}
+ */
+function validateForm(form) {
     const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
     let isValid = true;
     
     inputs.forEach(input => {
         if (!input.value.trim()) {
+            input.classList.add('error');
             isValid = false;
-            input.style.borderColor = '#e74c3c';
         } else {
-            input.style.borderColor = '#ddd';
+            input.classList.remove('error');
         }
     });
     
     return isValid;
 }
 
-// Image preview
-function previewImage(input, previewId) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            document.getElementById(previewId).src = e.target.result;
-        }
-        
-        reader.readAsDataURL(input.files[0]);
-    }
-}
+// ===== AUTO-HIDE ALERTS =====
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert');
+    
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            setTimeout(() => {
+                alert.remove();
+            }, 300);
+        }, 5000);
+    });
+});
 
-// Lazy loading images
-if ('IntersectionObserver' in window) {
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove('lazy');
-                imageObserver.unobserve(img);
+// ===== QUANTITY INPUT CONTROLS =====
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    
+    quantityInputs.forEach(container => {
+        const input = container.querySelector('input[type="number"]');
+        const decreaseBtn = container.querySelector('button:first-child');
+        const increaseBtn = container.querySelector('button:last-child');
+        
+        if (input && decreaseBtn && increaseBtn) {
+            decreaseBtn.addEventListener('click', () => {
+                const currentValue = parseInt(input.value) || 1;
+                const minValue = parseInt(input.min) || 1;
+                if (currentValue > minValue) {
+                    input.value = currentValue - 1;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            increaseBtn.addEventListener('click', () => {
+                const currentValue = parseInt(input.value) || 1;
+                const maxValue = parseInt(input.max) || 999;
+                if (currentValue < maxValue) {
+                    input.value = currentValue + 1;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+    });
+});
+
+// ===== SMOOTH SCROLL FOR ANCHOR LINKS =====
+document.addEventListener('DOMContentLoaded', function() {
+    const anchorLinks = document.querySelectorAll('a[href^="#"]');
+    
+    anchorLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href !== '#') {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             }
         });
     });
-    
-    document.querySelectorAll('img.lazy').forEach(img => {
-        imageObserver.observe(img);
-    });
-}
+});
 
-// Animation cho scroll
-const animateOnScroll = () => {
-    const elements = document.querySelectorAll('.animate-on-scroll');
-    
-    elements.forEach(element => {
-        const elementTop = element.getBoundingClientRect().top;
-        const elementBottom = element.getBoundingClientRect().bottom;
-        
-        if (elementTop < window.innerHeight && elementBottom > 0) {
-            element.classList.add('animated');
-        }
-    });
-};
-
-window.addEventListener('scroll', animateOnScroll);
-
-// CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-    
-    .animate-on-scroll {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.6s ease;
-    }
-    
-    .animate-on-scroll.animated {
-        opacity: 1;
-        transform: translateY(0);
-    }
-`;
-document.head.appendChild(style);
+// ===== CONSOLE LOG =====
+console.log('Xanh Organic - Main.js loaded successfully ✓');
