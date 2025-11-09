@@ -456,3 +456,373 @@ function isValidPhone($phone) {
     // Kiểm tra độ dài (10-11 số)
     return strlen($phone) >= 10 && strlen($phone) <= 11;
 }
+/**
+ * THÊM VÀO CUỐI FILE includes/functions.php
+ */
+
+// ===== QUẢN LÝ WISHLIST =====
+
+/**
+ * Kiểm tra sản phẩm có trong wishlist không
+ */
+function isInWishlist($product_id) {
+    global $conn;
+    
+    if (!isLoggedIn()) {
+        return false;
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    $sql = "SELECT id FROM wishlist WHERE user_id = ? AND product_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $user_id, $product_id);
+    $stmt->execute();
+    
+    return $stmt->get_result()->num_rows > 0;
+}
+
+/**
+ * Thêm sản phẩm vào wishlist
+ */
+function addToWishlist($product_id) {
+    global $conn;
+    
+    if (!isLoggedIn()) {
+        return false;
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    
+    // Kiểm tra đã có chưa
+    if (isInWishlist($product_id)) {
+        return true;
+    }
+    
+    $sql = "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $user_id, $product_id);
+    
+    return $stmt->execute();
+}
+
+/**
+ * Xóa sản phẩm khỏi wishlist
+ */
+function removeFromWishlist($product_id) {
+    global $conn;
+    
+    if (!isLoggedIn()) {
+        return false;
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    $sql = "DELETE FROM wishlist WHERE user_id = ? AND product_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $user_id, $product_id);
+    
+    return $stmt->execute();
+}
+
+/**
+ * Lấy danh sách wishlist
+ */
+function getWishlist() {
+    global $conn;
+    
+    if (!isLoggedIn()) {
+        return [];
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    $sql = "SELECT w.*, p.name, p.price, p.sale_price, p.image, p.unit, p.stock, c.name as category_name
+            FROM wishlist w
+            INNER JOIN products p ON w.product_id = p.id
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE w.user_id = ?
+            ORDER BY w.created_at DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $wishlist = [];
+    while ($row = $result->fetch_assoc()) {
+        $wishlist[] = $row;
+    }
+    
+    return $wishlist;
+}
+
+/**
+ * Đếm số sản phẩm trong wishlist
+ */
+function getWishlistCount() {
+    global $conn;
+    
+    if (!isLoggedIn()) {
+        return 0;
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    $sql = "SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    
+    return (int)$stmt->get_result()->fetch_assoc()['count'];
+}
+
+// ===== QUẢN LÝ VOUCHERS =====
+
+/**
+ * Kiểm tra và lấy thông tin voucher
+ */
+function getVoucherByCode($code) {
+    global $conn;
+    
+    $sql = "SELECT * FROM vouchers 
+            WHERE code = ? 
+            AND status = 'active' 
+            AND valid_from <= NOW() 
+            AND valid_to >= NOW()
+            AND (usage_limit IS NULL OR used_count < usage_limit)";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $code);
+    $stmt->execute();
+    
+    return $stmt->get_result()->fetch_assoc();
+}
+
+/**
+ * Kiểm tra user có thể dùng voucher không
+ */
+function canUseVoucher($voucher_id, $user_id) {
+    global $conn;
+    
+    $sql = "SELECT v.*, 
+            (SELECT COUNT(*) FROM voucher_usage WHERE voucher_id = ? AND user_id = ?) as user_usage
+            FROM vouchers v 
+            WHERE v.id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("iii", $voucher_id, $user_id, $voucher_id);
+    $stmt->execute();
+    $voucher = $stmt->get_result()->fetch_assoc();
+    
+    if (!$voucher) {
+        return false;
+    }
+    
+    // Kiểm tra số lần dùng của user
+    if ($voucher['user_usage'] >= $voucher['user_limit']) {
+        return false;
+    }
+    
+    // Kiểm tra voucher dành cho khách mới
+    if ($voucher['voucher_type'] == 'new_customer') {
+        $order_count = $conn->query("SELECT COUNT(*) as count FROM orders WHERE user_id = $user_id")->fetch_assoc()['count'];
+        if ($order_count > 0) {
+            return false;
+        }
+    }
+    
+    // Kiểm tra voucher dành cho khách thân thiết
+    if ($voucher['voucher_type'] == 'loyal') {
+        $order_count = $conn->query("SELECT COUNT(*) as count FROM orders WHERE user_id = $user_id")->fetch_assoc()['count'];
+        if ($order_count < 3) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+/**
+ * Tính số tiền giảm từ voucher
+ */
+function calculateVoucherDiscount($voucher, $order_amount) {
+    if ($order_amount < $voucher['min_order_amount']) {
+        return 0;
+    }
+    
+    if ($voucher['discount_type'] == 'percent') {
+        $discount = $order_amount * ($voucher['discount_value'] / 100);
+        
+        // Giới hạn số tiền giảm tối đa
+        if ($voucher['max_discount'] && $discount > $voucher['max_discount']) {
+            $discount = $voucher['max_discount'];
+        }
+    } else {
+        $discount = $voucher['discount_value'];
+    }
+    
+    return min($discount, $order_amount);
+}
+
+/**
+ * Áp dụng voucher cho đơn hàng
+ */
+function applyVoucher($voucher_id, $order_id, $discount_amount) {
+    global $conn;
+    
+    if (!isLoggedIn()) {
+        return false;
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    
+    // Lưu lịch sử sử dụng
+    $sql = "INSERT INTO voucher_usage (voucher_id, user_id, order_id, discount_amount) 
+            VALUES (?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("iiid", $voucher_id, $user_id, $order_id, $discount_amount);
+    
+    if ($stmt->execute()) {
+        // Tăng used_count
+        $conn->query("UPDATE vouchers SET used_count = used_count + 1 WHERE id = $voucher_id");
+        return true;
+    }
+    
+    return false;
+}
+
+/**
+ * Lấy voucher phù hợp cho user
+ */
+function getAvailableVouchers($user_id) {
+    global $conn;
+    
+    // Đếm số đơn hàng
+    $order_count = $conn->query("SELECT COUNT(*) as count FROM orders WHERE user_id = $user_id")->fetch_assoc()['count'];
+    
+    $sql = "SELECT v.*, 
+            (SELECT COUNT(*) FROM voucher_usage WHERE voucher_id = v.id AND user_id = ?) as user_usage
+            FROM vouchers v 
+            WHERE v.status = 'active' 
+            AND v.valid_from <= NOW() 
+            AND v.valid_to >= NOW()
+            AND (v.usage_limit IS NULL OR v.used_count < v.usage_limit)
+            HAVING user_usage < v.user_limit";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $vouchers = [];
+    while ($row = $result->fetch_assoc()) {
+        // Lọc theo điều kiện voucher_type
+        if ($row['voucher_type'] == 'new_customer' && $order_count > 0) {
+            continue;
+        }
+        if ($row['voucher_type'] == 'loyal' && $order_count < 3) {
+            continue;
+        }
+        
+        $vouchers[] = $row;
+    }
+    
+    return $vouchers;
+}
+
+// ===== QUẢN LÝ POLICIES =====
+
+/**
+ * Lấy chính sách theo loại
+ */
+function getPolicyByType($type) {
+    global $conn;
+    
+    $sql = "SELECT * FROM policies WHERE type = ? AND status = 'active'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $type);
+    $stmt->execute();
+    
+    return $stmt->get_result()->fetch_assoc();
+}
+
+/**
+ * Lấy tất cả chính sách
+ */
+function getAllPolicies() {
+    global $conn;
+    
+    $sql = "SELECT * FROM policies WHERE status = 'active' ORDER BY type";
+    $result = $conn->query($sql);
+    
+    $policies = [];
+    while ($row = $result->fetch_assoc()) {
+        $policies[] = $row;
+    }
+    
+    return $policies;
+}
+
+// ===== QUẢN LÝ PAYMENT QR CODES =====
+
+/**
+ * Lấy thông tin thanh toán
+ */
+function getPaymentInfo($method) {
+    global $conn;
+    
+    $sql = "SELECT * FROM payment_qrcodes WHERE payment_method = ? AND status = 'active'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $method);
+    $stmt->execute();
+    
+    return $stmt->get_result()->fetch_assoc();
+}
+
+// ===== QUẢN LÝ LỊCH SỬ MUA HÀNG =====
+
+/**
+ * Lấy lịch sử mua hàng của user
+ */
+function getOrderHistory($user_id, $limit = 10) {
+    global $conn;
+    
+    $sql = "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $user_id, $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $orders = [];
+    while ($row = $result->fetch_assoc()) {
+        $orders[] = $row;
+    }
+    
+    return $orders;
+}
+
+/**
+ * Đếm tổng số đơn hàng của user
+ */
+function getTotalOrders($user_id) {
+    global $conn;
+    
+    $sql = "SELECT COUNT(*) as count FROM orders WHERE user_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    
+    return (int)$stmt->get_result()->fetch_assoc()['count'];
+}
+
+/**
+ * Tính tổng chi tiêu của user
+ */
+function getTotalSpent($user_id) {
+    global $conn;
+    
+    $sql = "SELECT SUM(total_amount) as total FROM orders WHERE user_id = ? AND order_status = 'completed'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    
+    return (float)($stmt->get_result()->fetch_assoc()['total'] ?? 0);
+}
+?>
