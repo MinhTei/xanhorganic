@@ -2,7 +2,6 @@
 require_once 'includes/header.php';
 
 $featured_products = getFeaturedProducts(8);
-$latest_products = getLatestProducts(8);
 $categories = getCategories();
 ?>
 
@@ -72,7 +71,6 @@ $categories = getCategories();
                     <?php 
                     $image_src = 'https://via.placeholder.com/300x250?text=' . urlencode($category['name']);
                     
-                    // Nếu có hình ảnh thực tế
                     if (!empty($category['image'])) {
                         $image_path = __DIR__ . '/assets/' . $category['image'];
                         if (file_exists($image_path)) {
@@ -109,21 +107,29 @@ $categories = getCategories();
         
         <div class="products-grid">
             <?php foreach ($featured_products as $product): ?>
-            <div class="product-card">
+            <div class="product-card" data-product-id="<?php echo $product['id']; ?>">
                 <div class="product-image">
                     <?php if ($product['sale_price']): ?>
                         <span class="product-badge">
                             -<?php echo round((($product['price'] - $product['sale_price']) / $product['price']) * 100); ?>%
                         </span>
                     <?php endif; ?>
+                    
+                    <!-- Nút wishlist -->
+                    <button class="btn-wishlist <?php echo isLoggedIn() && isInWishlist($product['id']) ? 'active' : ''; ?>" 
+                            onclick="toggleWishlist(<?php echo $product['id']; ?>, this)"
+                            title="Thêm vào yêu thích">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
                         <?php
                         $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
                         
                         if (!empty($product['image'])) {
-                            $image_path = __DIR__ . '/assets/images/products/' . $product['image'];
+                            $image_path = __DIR__ . '/assets/' . $product['image'];
                             if (file_exists($image_path)) {
-                                $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image']);
+                                $image_url = SITE_URL . '/assets/' . safe_html($product['image']);
                             }
                         }
                         ?>
@@ -239,78 +245,6 @@ $categories = getCategories();
             <a href="<?php echo SITE_URL; ?>/news.php" class="btn btn-primary">
                 Xem Tất Cả Tin Tức <i class="fas fa-arrow-right"></i>
             </a>
-        </div>
-    </div>
-</section>
-
-<!-- Latest Products -->
-<section class="latest-products">
-    <div class="container">
-        <div class="section-title">
-            <h2>Sản Phẩm Mới Nhất</h2>
-            <p>Khám phá những sản phẩm vừa được cập nhật</p>
-        </div>
-        
-        <div class="products-grid">
-            <?php foreach ($latest_products as $product): ?>
-            <div class="product-card">
-                <div class="product-image">
-                    <?php if ($product['sale_price']): ?>
-                        <span class="product-badge">
-                            -<?php echo round((($product['price'] - $product['sale_price']) / $product['price']) * 100); ?>%
-                        </span>
-                    <?php endif; ?>
-                    <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
-                        <?php
-                        $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
-                        
-                        if (!empty($product['image'])) {
-                            $image_path = __DIR__ . '/assets/images/products/' . $product['image'];
-                            if (file_exists($image_path)) {
-                                $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image']);
-                            }
-                        }
-                        ?>
-                        <img src="<?php echo $image_url; ?>" alt="<?php echo safe_html($product['name']); ?>">
-                    </a>
-                </div>
-                <div class="product-info">
-                    <div class="product-category">
-                        <?php
-                        $cat = getCategoryById($product['category_id']);
-                        echo safe_html($cat['name'] ?? 'Chưa phân loại');
-                        ?>
-                    </div>
-                    <h3 class="product-name">
-                        <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
-                            <?php echo safe_html($product['name']); ?>
-                        </a>
-                    </h3>
-                    <?php if ($product['certification']): ?>
-                    <div class="product-certification">
-                        <span class="cert-badge"><?php echo safe_html($product['certification']); ?></span>
-                    </div>
-                    <?php endif; ?>
-                    <div class="product-price">
-                        <span class="price-current">
-                            <?php echo formatMoney($product['sale_price'] ?? $product['price']); ?>
-                        </span>
-                        <?php if ($product['sale_price']): ?>
-                            <span class="price-old"><?php echo formatMoney($product['price']); ?></span>
-                        <?php endif; ?>
-                        <span style="color: #666; font-size: 14px;">/<?php echo safe_html($product['unit']); ?></span>
-                    </div>
-                    <div class="product-actions">
-                        <button class="btn-add-cart" onclick="addToCart(<?php echo $product['id']; ?>)">
-                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
-                        </button>
-                        <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>" class="btn-view-detail">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
         </div>
     </div>
 </section>
