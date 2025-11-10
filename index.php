@@ -10,7 +10,7 @@ $categories = getCategories();
 <section class="hero-slideshow">
     <div class="slideshow-container">
         <div class="slide fade">
-            <img src="<?php echo SITE_URL; ?>/assets/images/banners/banner1.jpg" alt="Banner 1">
+            <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200&h=500&fit=crop" alt="Banner 1">
             <div class="slide-text">
                 <h2>Thực Phẩm Hữu Cơ 100%</h2>
                 <p>An toàn - Tươi ngon - Chất lượng cao</p>
@@ -19,7 +19,7 @@ $categories = getCategories();
         </div>
 
         <div class="slide fade">
-            <img src="<?php echo SITE_URL; ?>/assets/images/banners/banner2.jpg" alt="Banner 2">
+            <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&h=500&fit=crop" alt="Banner 2">
             <div class="slide-text">
                 <h2>Chứng Nhận USDA & EU Organic</h2>
                 <p>Sản phẩm đạt tiêu chuẩn quốc tế</p>
@@ -28,7 +28,7 @@ $categories = getCategories();
         </div>
 
         <div class="slide fade">
-            <img src="<?php echo SITE_URL; ?>/assets/images/banners/banner3.jpg" alt="Banner 3">
+            <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=500&fit=crop" alt="Banner 3">
             <div class="slide-text">
                 <h2>Giao Hàng Nhanh 2-4 Giờ</h2>
                 <p>Tươi ngon đến tận nhà bạn</p>
@@ -37,7 +37,7 @@ $categories = getCategories();
         </div>
 
         <div class="slide fade">
-            <img src="<?php echo SITE_URL; ?>/assets/images/banners/banner4.jpg" alt="Banner 4">
+            <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1200&h=500&fit=crop" alt="Banner 4">
             <div class="slide-text">
                 <h2>Ưu Đãi Đặc Biệt</h2>
                 <p>Giảm giá đến 30% cho đơn hàng đầu tiên</p>
@@ -45,12 +45,10 @@ $categories = getCategories();
             </div>
         </div>
 
-        <!-- Navigation arrows -->
         <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
         <a class="next" onclick="plusSlides(1)">&#10095;</a>
     </div>
 
-    <!-- Dots -->
     <div class="dots-container">
         <span class="dot" onclick="currentSlide(1)"></span>
         <span class="dot" onclick="currentSlide(2)"></span>
@@ -72,11 +70,14 @@ $categories = getCategories();
             <div class="product-card">
                 <div class="product-image">
                     <?php 
-                    $image_src = SITE_URL . '/assets/' . safe_html($category['image'] ?? '');
-                    $image_path = __DIR__ . '/assets/' . ($category['image'] ?? '');
+                    $image_src = 'https://via.placeholder.com/300x250?text=' . urlencode($category['name']);
                     
-                    if (empty($category['image']) || !file_exists($image_path)) {
-                        $image_src = 'https://via.placeholder.com/300x250?text=' . urlencode($category['name']);
+                    // Nếu có hình ảnh thực tế
+                    if (!empty($category['image'])) {
+                        $image_path = __DIR__ . '/assets/' . $category['image'];
+                        if (file_exists($image_path)) {
+                            $image_src = SITE_URL . '/assets/' . safe_html($category['image']);
+                        }
                     }
                     ?>
                     <img src="<?php echo $image_src; ?>" alt="<?php echo safe_html($category['name']); ?>">
@@ -117,11 +118,13 @@ $categories = getCategories();
                     <?php endif; ?>
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
                         <?php
-                        $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image'] ?? '');
-                        $image_path = __DIR__ . '/assets/images/products/' . ($product['image'] ?? '');
+                        $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
                         
-                        if (empty($product['image']) || !file_exists($image_path)) {
-                            $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
+                        if (!empty($product['image'])) {
+                            $image_path = __DIR__ . '/assets/images/products/' . $product['image'];
+                            if (file_exists($image_path)) {
+                                $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image']);
+                            }
                         }
                         ?>
                         <img src="<?php echo $image_url; ?>" alt="<?php echo safe_html($product['name']); ?>">
@@ -174,7 +177,7 @@ $categories = getCategories();
     </div>
 </section>
 
-<!-- News Section (Tin tức mới) -->
+<!-- News Section -->
 <section class="news-section">
     <div class="container">
         <div class="section-title">
@@ -183,54 +186,50 @@ $categories = getCategories();
         </div>
         
         <div class="news-grid">
-            <!-- Bài viết 1 -->
             <article class="news-card">
                 <div class="news-image">
-                    <img src="https://via.placeholder.com/400x250?text=Tin+tuc+1" alt="Tin tức 1">
+                    <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=400&h=250&fit=crop" alt="Tin tức 1">
                     <span class="news-date">09/11/2025</span>
                 </div>
                 <div class="news-content">
                     <h3><a href="<?php echo SITE_URL; ?>/news-detail.php?id=1">Lợi ích của thực phẩm hữu cơ với sức khỏe</a></h3>
-                    <p>Thực phẩm hữu cơ không chỉ tốt cho sức khỏe mà còn góp phần bảo vệ môi trường. Khám phá những lợi ích tuyệt vời...</p>
+                    <p>Thực phẩm hữu cơ không chỉ tốt cho sức khỏe mà còn góp phần bảo vệ môi trường...</p>
                     <a href="<?php echo SITE_URL; ?>/news-detail.php?id=1" class="read-more">Đọc thêm <i class="fas fa-arrow-right"></i></a>
                 </div>
             </article>
 
-            <!-- Bài viết 2 -->
             <article class="news-card">
                 <div class="news-image">
-                    <img src="https://via.placeholder.com/400x250?text=Tin+tuc+2" alt="Tin tức 2">
+                    <img src="https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=400&h=250&fit=crop" alt="Tin tức 2">
                     <span class="news-date">08/11/2025</span>
                 </div>
                 <div class="news-content">
                     <h3><a href="<?php echo SITE_URL; ?>/news-detail.php?id=2">5 Cách bảo quản rau củ hữu cơ tươi lâu</a></h3>
-                    <p>Hướng dẫn chi tiết cách bảo quản rau củ hữu cơ để giữ được độ tươi ngon và giá trị dinh dưỡng cao nhất...</p>
+                    <p>Hướng dẫn chi tiết cách bảo quản rau củ hữu cơ để giữ được độ tươi ngon...</p>
                     <a href="<?php echo SITE_URL; ?>/news-detail.php?id=2" class="read-more">Đọc thêm <i class="fas fa-arrow-right"></i></a>
                 </div>
             </article>
 
-            <!-- Bài viết 3 -->
             <article class="news-card">
                 <div class="news-image">
-                    <img src="https://via.placeholder.com/400x250?text=Tin+tuc+3" alt="Tin tức 3">
+                    <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=400&h=250&fit=crop" alt="Tin tức 3">
                     <span class="news-date">07/11/2025</span>
                 </div>
                 <div class="news-content">
                     <h3><a href="<?php echo SITE_URL; ?>/news-detail.php?id=3">Chứng nhận hữu cơ USDA là gì?</a></h3>
-                    <p>Tìm hiểu về tiêu chuẩn chứng nhận hữu cơ USDA - một trong những tiêu chuẩn khắt khe nhất thế giới...</p>
+                    <p>Tìm hiểu về tiêu chuẩn chứng nhận hữu cơ USDA - một trong những tiêu chuẩn khắt khe nhất...</p>
                     <a href="<?php echo SITE_URL; ?>/news-detail.php?id=3" class="read-more">Đọc thêm <i class="fas fa-arrow-right"></i></a>
                 </div>
             </article>
 
-            <!-- Bài viết 4 -->
             <article class="news-card">
                 <div class="news-image">
-                    <img src="https://via.placeholder.com/400x250?text=Tin+tuc+4" alt="Tin tức 4">
+                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=250&fit=crop" alt="Tin tức 4">
                     <span class="news-date">06/11/2025</span>
                 </div>
                 <div class="news-content">
                     <h3><a href="<?php echo SITE_URL; ?>/news-detail.php?id=4">Thực đơn healthy với thực phẩm hữu cơ</a></h3>
-                    <p>Gợi ý thực đơn 7 ngày với các món ăn healthy từ thực phẩm hữu cơ, giúp bạn khỏe đẹp mỗi ngày...</p>
+                    <p>Gợi ý thực đơn 7 ngày với các món ăn healthy từ thực phẩm hữu cơ...</p>
                     <a href="<?php echo SITE_URL; ?>/news-detail.php?id=4" class="read-more">Đọc thêm <i class="fas fa-arrow-right"></i></a>
                 </div>
             </article>
@@ -263,11 +262,13 @@ $categories = getCategories();
                     <?php endif; ?>
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
                         <?php
-                        $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image'] ?? '');
-                        $image_path = __DIR__ . '/assets/images/products/' . ($product['image'] ?? '');
+                        $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
                         
-                        if (empty($product['image']) || !file_exists($image_path)) {
-                            $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
+                        if (!empty($product['image'])) {
+                            $image_path = __DIR__ . '/assets/images/products/' . $product['image'];
+                            if (file_exists($image_path)) {
+                                $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image']);
+                            }
                         }
                         ?>
                         <img src="<?php echo $image_url; ?>" alt="<?php echo safe_html($product['name']); ?>">
@@ -354,10 +355,10 @@ $categories = getCategories();
 let slideIndex = 1;
 showSlides(slideIndex);
 
-// Auto slide every 2.5 seconds
+// Auto slide every 3 seconds
 setInterval(() => {
     plusSlides(1);
-}, 2500);
+}, 3000);
 
 function plusSlides(n) {
     showSlides(slideIndex += n);
@@ -382,8 +383,12 @@ function showSlides(n) {
         dots[i].className = dots[i].className.replace(" active", "");
     }
     
-    slides[slideIndex - 1].style.display = "block";
-    dots[slideIndex - 1].className += " active";
+    if (slides[slideIndex - 1]) {
+        slides[slideIndex - 1].style.display = "block";
+    }
+    if (dots[slideIndex - 1]) {
+        dots[slideIndex - 1].className += " active";
+    }
 }
 </script>
 

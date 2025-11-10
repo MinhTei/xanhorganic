@@ -4,6 +4,7 @@ require_once __DIR__ . '/functions.php';
 
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
 $cart_count = getCartCount();
+$wishlist_count = isLoggedIn() ? getWishlistCount() : 0;
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -30,6 +31,14 @@ $cart_count = getCartCount();
                     <?php if (isLoggedIn()): ?>
                         <a href="<?php echo SITE_URL; ?>/profile.php">
                             <i class="fas fa-user"></i> Xin chào, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>
+                        </a>
+                        <span class="divider">|</span>
+                        <a href="<?php echo SITE_URL; ?>/wishlist.php" title="Sản phẩm yêu thích">
+                            <i class="fas fa-heart"></i> Yêu thích (<?php echo $wishlist_count; ?>)
+                        </a>
+                        <span class="divider">|</span>
+                        <a href="<?php echo SITE_URL; ?>/history.php" title="Lịch sử mua hàng">
+                            <i class="fas fa-history"></i> Lịch sử
                         </a>
                         <span class="divider">|</span>
                         <a href="<?php echo SITE_URL; ?>/logout.php">
@@ -68,6 +77,26 @@ $cart_count = getCartCount();
                 </div>
 
                 <div class="header-right">
+                    <?php if (isLoggedIn()): ?>
+                    <!-- Wishlist Icon -->
+                    <div class="cart-icon" style="margin-right: 15px;">
+                        <a href="<?php echo SITE_URL; ?>/wishlist.php" title="Danh sách yêu thích">
+                            <i class="fas fa-heart" style="color: #e74c3c;"></i>
+                            <?php if ($wishlist_count > 0): ?>
+                            <span class="cart-count" style="background: #e74c3c;"><?php echo $wishlist_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </div>
+                    
+                    <!-- Order History Icon -->
+                    <div class="cart-icon" style="margin-right: 15px;">
+                        <a href="<?php echo SITE_URL; ?>/history.php" title="Lịch sử mua hàng">
+                            <i class="fas fa-history" style="color: #90c33c;"></i>
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- Cart Icon -->
                     <div class="cart-icon">
                         <a href="<?php echo SITE_URL; ?>/cart.php">
                             <i class="fas fa-shopping-cart"></i>
