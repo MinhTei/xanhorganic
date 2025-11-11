@@ -3,11 +3,11 @@
 -- ===============================
 
 -- Tạo database
-CREATE DATABASE IF NOT EXISTS cua_hang_rau_sach 
+CREATE DATABASE IF NOT EXISTS xanh_organic 
 CHARACTER SET utf8mb4 
 COLLATE utf8mb4_unicode_ci;
 
-USE cua_hang_rau_sach;
+USE xanh_organic;
 
 -- ===============================
 -- BẢNG USERS - QUẢN LÝ TÀI KHOẢN
