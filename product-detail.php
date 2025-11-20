@@ -1,7 +1,17 @@
 <?php
+/**
+ * PRODUCT-DETAIL.PHP - Trang chi tiết sản phẩm
+ * 
+ * Hiển thị:
+ * - Thông tin chi tiết sản phẩm
+ * - Hình ảnh sản phẩm
+ * - Form thêm vào giỏ hàng
+ * - Sản phẩm liên quan
+ */
+
 require_once 'includes/header.php';
 
-// Lấy ID sản phẩm
+// Lấy ID sản phẩm từ URL
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($product_id <= 0) {
@@ -17,6 +27,9 @@ if (!$product) {
 
 // Lấy sản phẩm liên quan (cùng category)
 $related_products = getProductsByCategory($product['category_id'], 4);
+
+$error = '';
+$success = '';
 
 // Xử lý thêm vào giỏ hàng
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
@@ -38,6 +51,14 @@ $discount = 0;
 if ($product['sale_price']) {
     $discount = round((($product['price'] - $product['sale_price']) / $product['price']) * 100);
 }
+
+// Xử lý hình ảnh sản phẩm
+$image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image'] ?? '');
+$image_path = __DIR__ . '/assets/images/products/' . ($product['image'] ?? '');
+
+if (empty($product['image']) || !file_exists($image_path)) {
+    $image_url = getProductImageUrl($product);
+}
 ?>
 
 <div class="container">
@@ -48,14 +69,14 @@ if ($product['sale_price']) {
         <a href="<?php echo SITE_URL; ?>/products.php" style="color: #90c33c;">Sản phẩm</a>
         <i class="fas fa-chevron-right" style="margin: 0 10px; font-size: 12px;"></i>
         <a href="<?php echo SITE_URL; ?>/products.php?category=<?php echo $product['category_id']; ?>" style="color: #90c33c;">
-            <?php echo htmlspecialchars($product['category_name']); ?>
+            <?php echo safe_html($product['category_name']); ?>
         </a>
         <i class="fas fa-chevron-right" style="margin: 0 10px; font-size: 12px;"></i>
-        <span><?php echo htmlspecialchars($product['name']); ?></span>
+        <span><?php echo safe_html($product['name']); ?></span>
     </div>
 
     <!-- Thông báo -->
-    <?php if (isset($success)): ?>
+    <?php if ($success): ?>
         <div class="alert alert-success">
             <i class="fas fa-check-circle"></i> <?php echo $success; ?>
             <a href="<?php echo SITE_URL; ?>/cart.php" style="color: #155724; text-decoration: underline; margin-left: 10px;">
@@ -64,7 +85,7 @@ if ($product['sale_price']) {
         </div>
     <?php endif; ?>
     
-    <?php if (isset($error)): ?>
+    <?php if ($error): ?>
         <div class="alert alert-error">
             <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
         </div>
@@ -82,53 +103,31 @@ if ($product['sale_price']) {
                     </span>
                 <?php endif; ?>
                 
-                <?php
-                    $image_url = "https://via.placeholder.com/600x500?text=" . urlencode($product['name']);
-                    if (!empty($product['image']) && file_exists(__DIR__ . '/assets/images/products/' . $product['image'])) {
-                        $image_url = SITE_URL . '/assets/images/products/' . $product['image'];
-                    }
-                ?>
                 <img src="<?php echo $image_url; ?>" 
-                     alt="<?php echo htmlspecialchars($product['name']); ?>"
+                     alt="<?php echo safe_html($product['name']); ?>"
                      style="width: 100%; height: 500px; object-fit: cover;">
-            </div>
-            
-            <!-- Gallery nhỏ (nếu có) -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px;">
-                <div style="border: 2px solid #90c33c; border-radius: 8px; overflow: hidden;">
-                    <img src="https://via.placeholder.com/150?text=1" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;">
-                </div>
-                <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                    <img src="https://via.placeholder.com/150?text=2" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;">
-                </div>
-                <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                    <img src="https://via.placeholder.com/150?text=3" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;">
-                </div>
-                <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                    <img src="https://via.placeholder.com/150?text=4" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;">
-                </div>
             </div>
         </div>
 
         <!-- Thông tin sản phẩm -->
         <div>
             <div style="display: inline-block; background: #e8f5e9; color: #2d5016; padding: 5px 15px; border-radius: 15px; font-size: 13px; font-weight: 500; margin-bottom: 15px;">
-                <?php echo htmlspecialchars($product['category_name']); ?>
+                <?php echo safe_html($product['category_name']); ?>
             </div>
             
             <h1 style="color: #2d5016; font-size: 32px; margin-bottom: 15px; line-height: 1.3;">
-                <?php echo htmlspecialchars($product['name']); ?>
+                <?php echo safe_html($product['name']); ?>
             </h1>
 
             <!-- Chứng nhận -->
             <?php if ($product['certification']): ?>
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <span style="background: #90c33c; color: white; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-                    <i class="fas fa-certificate"></i> <?php echo htmlspecialchars($product['certification']); ?>
+                    <i class="fas fa-certificate"></i> <?php echo safe_html($product['certification']); ?>
                 </span>
                 <?php if ($product['origin']): ?>
                 <span style="background: #f8f9fa; color: #666; padding: 6px 15px; border-radius: 20px; font-size: 13px;">
-                    <i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($product['origin']); ?>
+                    <i class="fas fa-map-marker-alt"></i> <?php echo safe_html($product['origin']); ?>
                 </span>
                 <?php endif; ?>
             </div>
@@ -146,7 +145,7 @@ if ($product['sale_price']) {
                         </span>
                     <?php endif; ?>
                     <span style="color: #666; font-size: 16px;">
-                        /<?php echo htmlspecialchars($product['unit']); ?>
+                        /<?php echo safe_html($product['unit']); ?>
                     </span>
                 </div>
                 
@@ -169,11 +168,11 @@ if ($product['sale_price']) {
                 <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
                     <label style="font-weight: 500; color: #333;">Số lượng:</label>
                     <div class="quantity-input">
-                        <button type="button" onclick="this.nextElementSibling.stepDown(); this.nextElementSibling.dispatchEvent(new Event('change'));">
+                        <button type="button" onclick="this.nextElementSibling.stepDown();">
                             <i class="fas fa-minus"></i>
                         </button>
                         <input type="number" name="quantity" value="1" min="1" max="<?php echo $product['stock']; ?>" style="width: 80px;">
-                        <button type="button" onclick="this.previousElementSibling.stepUp(); this.previousElementSibling.dispatchEvent(new Event('change'));">
+                        <button type="button" onclick="this.previousElementSibling.stepUp();">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
@@ -183,10 +182,10 @@ if ($product['sale_price']) {
                     <button type="submit" name="add_to_cart" class="btn-add-cart" style="flex: 2; font-size: 16px; padding: 15px;">
                         <i class="fas fa-cart-plus"></i> Thêm Vào Giỏ Hàng
                     </button>
-                    <button type="button" onclick="addToCart(<?php echo $product_id; ?>, document.querySelector('input[name=quantity]').value); window.location.href='<?php echo SITE_URL; ?>/checkout.php';" 
-                            style="flex: 1; background: #e74c3c; color: white; padding: 15px; border-radius: 5px; font-weight: 500; font-size: 16px;">
-                        Mua Ngay
-                    </button>
+                    <a href="<?php echo SITE_URL; ?>/cart.php" 
+                       style="flex: 1; background: #e74c3c; color: white; padding: 15px; border-radius: 5px; font-weight: 500; font-size: 16px; text-align: center; text-decoration: none;">
+                        Xem Giỏ Hàng
+                    </a>
                 </div>
             </form>
             <?php else: ?>
@@ -200,8 +199,8 @@ if ($product['sale_price']) {
                 <h3 style="color: #2d5016; margin-bottom: 15px; font-size: 18px;">Đặc điểm nổi bật:</h3>
                 <ul style="color: #666; line-height: 2; padding-left: 20px;">
                     <li>100% hữu cơ, không hóa chất bảo vệ thực vật</li>
-                    <li>Chứng nhận <?php echo htmlspecialchars($product['certification']); ?></li>
-                    <li>Nguồn gốc: <?php echo htmlspecialchars($product['origin']); ?></li>
+                    <li>Chứng nhận <?php echo safe_html($product['certification']); ?></li>
+                    <li>Nguồn gốc: <?php echo safe_html($product['origin']); ?></li>
                     <li>Tươi ngon, thu hoạch gần nhất</li>
                     <li>Giao hàng nhanh trong 2-4 giờ</li>
                 </ul>
@@ -229,7 +228,7 @@ if ($product['sale_price']) {
     <div style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 50px;">
         <h2 style="color: #2d5016; margin-bottom: 20px;">Mô Tả Sản Phẩm</h2>
         <div style="color: #666; line-height: 1.8;">
-            <?php echo nl2br(htmlspecialchars($product['description'])); ?>
+            <?php echo nl2br(safe_html($product['description'])); ?>
             
             <h3 style="color: #2d5016; margin-top: 30px; margin-bottom: 15px;">Lợi ích sức khỏe:</h3>
             <p>Sản phẩm hữu cơ này mang lại nhiều lợi ích cho sức khỏe của bạn và gia đình, 
@@ -247,6 +246,14 @@ if ($product['sale_price']) {
         <div class="products-grid">
             <?php foreach ($related_products as $related): ?>
                 <?php if ($related['id'] != $product_id): ?>
+                    <?php
+                        $related_image_url = SITE_URL . '/assets/images/products/' . safe_html($related['image'] ?? '');
+                        $related_image_path = __DIR__ . '/assets/images/products/' . ($related['image'] ?? '');
+                        
+                        if (empty($related['image']) || !file_exists($related_image_path)) {
+                               $related_image_url = getProductImageUrl($related);
+                        }
+                    ?>
                 <div class="product-card">
                     <div class="product-image">
                         <?php if ($related['sale_price']): ?>
@@ -255,21 +262,15 @@ if ($product['sale_price']) {
                             </span>
                         <?php endif; ?>
                         <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $related['id']; ?>">
-                            <?php
-                                $related_image_url = "https://via.placeholder.com/300x250?text=" . urlencode($related['name']);
-                                if (!empty($related['image']) && file_exists(__DIR__ . '/assets/images/products/' . $related['image'])) {
-                                    $related_image_url = SITE_URL . '/assets/images/products/' . $related['image'];
-                                }
-                            ?>
                             <img src="<?php echo $related_image_url; ?>" 
-                                 alt="<?php echo htmlspecialchars($related['name']); ?>">
+                                 alt="<?php echo safe_html($related['name']); ?>">
                         </a>
                     </div>
                     <div class="product-info">
-                        <div class="product-category"><?php echo htmlspecialchars($product['category_name']); ?></div>
+                        <div class="product-category"><?php echo safe_html($product['category_name']); ?></div>
                         <h3 class="product-name">
                             <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $related['id']; ?>">
-                                <?php echo htmlspecialchars($related['name']); ?>
+                                <?php echo safe_html($related['name']); ?>
                             </a>
                         </h3>
                         <div class="product-price">

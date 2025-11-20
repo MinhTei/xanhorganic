@@ -1,4 +1,15 @@
 <?php
+/**
+ * PRODUCTS.PHP - Trang danh sách sản phẩm
+ * 
+ * Chức năng:
+ * - Hiển thị danh sách sản phẩm
+ * - Tìm kiếm sản phẩm
+ * - Lọc theo category
+ * - Sắp xếp
+ * - Phân trang
+ */
+
 require_once 'includes/header.php';
 
 // Lấy tham số lọc
@@ -75,10 +86,7 @@ $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 // Lấy category hiện tại
 $current_category = null;
 if ($category_id > 0) {
-    $cat_stmt = $conn->prepare("SELECT * FROM categories WHERE id = ?");
-    $cat_stmt->bind_param("i", $category_id);
-    $cat_stmt->execute();
-    $current_category = $cat_stmt->get_result()->fetch_assoc();
+    $current_category = getCategoryById($category_id);
 }
 ?>
 
@@ -90,7 +98,7 @@ if ($category_id > 0) {
         <span>Sản phẩm</span>
         <?php if ($current_category): ?>
             <i class="fas fa-chevron-right" style="margin: 0 10px; font-size: 12px;"></i>
-            <span><?php echo htmlspecialchars($current_category['name']); ?></span>
+            <span><?php echo safe_html($current_category['name']); ?></span>
         <?php endif; ?>
     </div>
 </div>
@@ -101,9 +109,9 @@ if ($category_id > 0) {
         <h1 style="color: #2d5016; font-size: 36px; margin-bottom: 10px;">
             <?php 
             if ($search) {
-                echo 'Kết quả tìm kiếm: "' . htmlspecialchars($search) . '"';
+                echo 'Kết quả tìm kiếm: "' . safe_html($search) . '"';
             } elseif ($current_category) {
-                echo htmlspecialchars($current_category['name']);
+                echo safe_html($current_category['name']);
             } else {
                 echo 'Tất Cả Sản Phẩm';
             }
@@ -117,11 +125,8 @@ if ($category_id > 0) {
 <div class="container">
     <div class="filters-section">
         <form method="GET" action="" class="filters-content">
-            <?php if ($category_id): ?>
-                <input type="hidden" name="category" value="<?php echo $category_id; ?>">
-            <?php endif; ?>
             <?php if ($search): ?>
-                <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                <input type="hidden" name="search" value="<?php echo safe_html($search); ?>">
             <?php endif; ?>
             
             <div class="filter-group">
@@ -133,7 +138,7 @@ if ($category_id > 0) {
                     foreach ($categories as $cat):
                     ?>
                     <option value="<?php echo $cat['id']; ?>" <?php echo $category_id == $cat['id'] ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($cat['name']); ?>
+                        <?php echo safe_html($cat['name']); ?>
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -166,6 +171,7 @@ if ($category_id > 0) {
     <?php else: ?>
         <div class="products-grid">
             <?php foreach ($products as $product): ?>
+                <?php $image_url = getProductImageUrl($product); ?>
             <div class="product-card">
                 <div class="product-image">
                     <?php if ($product['sale_price']): ?>
@@ -174,28 +180,22 @@ if ($category_id > 0) {
                         </span>
                     <?php endif; ?>
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
-                        <?php
-                            $image_url = "https://via.placeholder.com/300x250?text=" . urlencode($product['name']);
-                            if (!empty($product['image']) && file_exists(__DIR__ . '/assets/images/products/' . $product['image'])) {
-                                $image_url = SITE_URL . '/assets/images/products/' . $product['image'];
-                            }
-                        ?>
                         <img src="<?php echo $image_url; ?>" 
-                             alt="<?php echo htmlspecialchars($product['name']); ?>">
+                             alt="<?php echo safe_html($product['name']); ?>">
                     </a>
                 </div>
                 <div class="product-info">
                     <div class="product-category">
-                        <?php echo htmlspecialchars($product['category_name']); ?>
+                        <?php echo safe_html($product['category_name']); ?>
                     </div>
                     <h3 class="product-name">
                         <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
-                            <?php echo htmlspecialchars($product['name']); ?>
+                            <?php echo safe_html($product['name']); ?>
                         </a>
                     </h3>
                     <?php if ($product['certification']): ?>
                     <div class="product-certification">
-                        <span class="cert-badge"><?php echo htmlspecialchars($product['certification']); ?></span>
+                        <span class="cert-badge"><?php echo safe_html($product['certification']); ?></span>
                     </div>
                     <?php endif; ?>
                     <div class="product-price">
@@ -205,7 +205,7 @@ if ($category_id > 0) {
                         <?php if ($product['sale_price']): ?>
                             <span class="price-old"><?php echo formatMoney($product['price']); ?></span>
                         <?php endif; ?>
-                        <span style="color: #666; font-size: 14px;">/<?php echo $product['unit']; ?></span>
+                        <span style="color: #666; font-size: 14px;">/<?php echo safe_html($product['unit']); ?></span>
                     </div>
                     <div class="product-actions">
                         <button class="btn-add-cart" onclick="addToCart(<?php echo $product['id']; ?>)">

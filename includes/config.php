@@ -79,5 +79,17 @@ $string = preg_replace('/(ì|í|ị|ỉ|ĩ)/', 'i', $string);
 
 // Timezone
 date_default_timezone_set('Asia/Ho_Chi_Minh');
+// Debug mode (set to true for development to show reset links)
+if (!defined('DEBUG_MODE')) {
+    define('DEBUG_MODE', false);
+}
+// SMTP / Mail settings (leave empty to use PHP mail())
+if (!defined('MAIL_FROM')) define('MAIL_FROM', 'no-reply@xanhorganic.local');
+if (!defined('MAIL_FROM_NAME')) define('MAIL_FROM_NAME', 'Xanh Organic');
+if (!defined('SMTP_HOST')) define('SMTP_HOST', '');
+if (!defined('SMTP_USER')) define('SMTP_USER', '');
+if (!defined('SMTP_PASS')) define('SMTP_PASS', '');
+if (!defined('SMTP_PORT')) define('SMTP_PORT', 587);
+if (!defined('SMTP_SECURE')) define('SMTP_SECURE', 'tls'); // 'tls' or 'ssl' or ''
 // KHÔNG CÓ THẺ ĐÓNG PHP 
 ?>

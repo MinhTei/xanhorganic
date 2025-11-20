@@ -1,4 +1,13 @@
 <?php
+/**
+ * CHECKOUT.PHP - Trang thanh toán
+ * 
+ * Đã sửa:
+ * - Lỗi htmlspecialchars với NULL
+ * - Kiểm tra tồn tại field trước khi sử dụng
+ * - Xử lý an toàn dữ liệu user
+ */
+
 require_once 'includes/config.php';
 
 // Kiểm tra đăng nhập
@@ -29,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone']);
     $address = trim($_POST['address']);
-    $note = trim($_POST['note']);
+    $note = trim($_POST['note'] ?? ''); // Có thể không có note
     $payment_method = $_POST['payment_method'];
     
     // Validate
@@ -65,6 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             foreach ($cart_items as $item) {
                 $product = getProductById($item['product_id']);
+                if (!$product) continue; // Bỏ qua sản phẩm không tồn tại
+                
                 $price = $product['sale_price'] ?? $product['price'];
                 $subtotal = $price * $item['quantity'];
                 
@@ -72,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt->execute();
                 
                 // Cập nhật tồn kho
-                $new_stock = $product['stock'] - $item['quantity'];
+                $new_stock = max(0, $product['stock'] - $item['quantity']); // Không cho âm
                 $update_sql = "UPDATE products SET stock = ? WHERE id = ?";
                 $update_stmt = $conn->prepare($update_sql);
                 $update_stmt->bind_param("ii", $new_stock, $product['id']);
@@ -86,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $conn->commit();
             
             // Redirect đến trang thành công
-            redirect('order-success.php?order=' . $order_number);
+            redirect('order_success.php?order=' . $order_number);
             
         } catch (Exception $e) {
             // Rollback nếu có lỗi
@@ -94,6 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = 'Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!';
         }
     }
+}
+
+// Hàm an toàn để hiển thị giá trị (tránh lỗi Deprecated)
+function safe_display($value) {
+    return $value !== null ? htmlspecialchars($value) : '';
 }
 ?>
 
@@ -127,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="form-group">
                     <label for="full_name">Họ và tên <span style="color: red;">*</span></label>
                     <input type="text" id="full_name" name="full_name" required
-                           value="<?php echo isset($_POST['full_name']) ? htmlspecialchars($_POST['full_name']) : htmlspecialchars($user['full_name']); ?>"
+                           value="<?php echo isset($_POST['full_name']) ? safe_display($_POST['full_name']) : safe_display($user['full_name'] ?? ''); ?>"
                            placeholder="Nhập họ tên người nhận">
                 </div>
                 
@@ -135,26 +151,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="form-group">
                         <label for="email">Email <span style="color: red;">*</span></label>
                         <input type="email" id="email" name="email" required
-                               value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : htmlspecialchars($user['email']); ?>"
+                               value="<?php echo isset($_POST['email']) ? safe_display($_POST['email']) : safe_display($user['email'] ?? ''); ?>"
                                placeholder="email@example.com">
                     </div>
                     
                     <div class="form-group">
                         <label for="phone">Số điện thoại <span style="color: red;">*</span></label>
                         <input type="tel" id="phone" name="phone" required
-                               value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : htmlspecialchars($user['phone']); ?>"
+                               value="<?php echo isset($_POST['phone']) ? safe_display($_POST['phone']) : safe_display($user['phone'] ?? ''); ?>"
                                placeholder="0901234567">
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="address">Địa chỉ giao hàng <span style="color: red;">*</span></label>
-                    <textarea id="address" name="address" required rows="3" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : htmlspecialchars($user['address']); ?></textarea>
+                    <textarea id="address" name="address" required rows="3" 
+                              placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"><?php echo isset($_POST['address']) ? safe_display($_POST['address']) : safe_display($user['address'] ?? ''); ?></textarea>
                 </div>
                 
                 <div class="form-group">
                     <label for="note">Ghi chú đơn hàng (tùy chọn)</label>
-                    <textarea id="note" name="note" rows="3" placeholder="Ví dụ: Giao hàng giờ hành chính, gọi trước khi giao..."><?php echo isset($_POST['note']) ? htmlspecialchars($_POST['note']) : ''; ?></textarea>
+                    <textarea id="note" name="note" rows="3" 
+                              placeholder="Ví dụ: Giao hàng giờ hành chính, gọi trước khi giao..."><?php echo isset($_POST['note']) ? safe_display($_POST['note']) : ''; ?></textarea>
                 </div>
             </div>
 
@@ -165,12 +183,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </h2>
                 
                 <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <label style="display: flex; align-items: center; padding: 20px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.3s;"
-                           onmouseover="this.style.borderColor='#90c33c'" 
-                           onmouseout="if(!this.querySelector('input').checked) this.style.borderColor='#ddd'">
+                    <label style="display: flex; align-items: center; padding: 20px; border: 2px solid #90c33c; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
                         <input type="radio" name="payment_method" value="cod" checked 
-                               style="width: 20px; height: 20px; margin-right: 15px;"
-                               onchange="document.querySelectorAll('label').forEach(l => l.style.borderColor='#ddd'); this.parentElement.style.borderColor='#90c33c';">
+                               style="width: 20px; height: 20px; margin-right: 15px;">
                         <div>
                             <strong style="color: #2d5016; font-size: 16px; display: block; margin-bottom: 5px;">
                                 <i class="fas fa-money-bill-wave"></i> Thanh toán khi nhận hàng (COD)
@@ -222,15 +237,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <?php foreach ($cart_items as $item): ?>
                         <?php 
                         $product = getProductById($item['product_id']);
+                        if (!$product) continue;
+                        
                         $price = $product['sale_price'] ?? $product['price'];
                         $subtotal = $price * $item['quantity'];
+                        
+                        // Xử lý ảnh (ưu tiên ảnh sản phẩm, nếu không có thì dùng ảnh category)
+                        $image_url = getProductImageUrl($product);
                         ?>
                         <div style="display: flex; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
-                            <img src="https://via.placeholder.com/60?text=<?php echo urlencode($product['name']); ?>" 
+                            <img src="<?php echo $image_url; ?>" 
                                  style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;">
                             <div style="flex: 1;">
                                 <h4 style="font-size: 14px; margin-bottom: 5px; color: #333;">
-                                    <?php echo htmlspecialchars($product['name']); ?>
+                                    <?php echo safe_html($product['name']); ?>
                                 </h4>
                                 <p style="font-size: 13px; color: #666; margin-bottom: 5px;">
                                     <?php echo formatMoney($price); ?> x <?php echo $item['quantity']; ?>
@@ -253,11 +273,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #666;">
                         <span>Phí vận chuyển:</span>
                         <strong style="color: #90c33c;">Miễn phí</strong>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #666;">
-                        <span>Giảm giá:</span>
-                        <strong>0đ</strong>
                     </div>
                     
                     <div style="border-top: 2px solid #90c33c; padding-top: 15px; display: flex; justify-content: space-between; font-size: 20px; font-weight: 700; color: #e74c3c;">

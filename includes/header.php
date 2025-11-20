@@ -4,6 +4,7 @@ require_once __DIR__ . '/functions.php';
 
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
 $cart_count = getCartCount();
+$wishlist_count = isLoggedIn() ? getWishlistCount() : 0;
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -14,10 +15,10 @@ $cart_count = getCartCount();
     
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Top Bar -->
     <div class="top-bar">
         <div class="container">
             <div class="top-bar-content">
@@ -29,7 +30,15 @@ $cart_count = getCartCount();
                 <div class="top-bar-right">
                     <?php if (isLoggedIn()): ?>
                         <a href="<?php echo SITE_URL; ?>/profile.php">
-                            <i class="fas fa-user"></i> Xin chào, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'Admin'); ?>
+                            <i class="fas fa-user"></i> Xin chào, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>
+                        </a>
+                        <span class="divider">|</span>
+                        <a href="<?php echo SITE_URL; ?>/wishlist.php" title="Sản phẩm yêu thích">
+                            <i class="fas fa-heart"></i> Yêu thích (<?php echo $wishlist_count; ?>)
+                        </a>
+                        <span class="divider">|</span>
+                        <a href="<?php echo SITE_URL; ?>/history.php" title="Lịch sử mua hàng">
+                            <i class="fas fa-history"></i> Lịch sử
                         </a>
                         <span class="divider">|</span>
                         <a href="<?php echo SITE_URL; ?>/logout.php">
@@ -49,6 +58,7 @@ $cart_count = getCartCount();
         </div>
     </div>
 
+    <!-- Header -->
     <header class="header">
         <div class="container">
             <div class="header-content">
@@ -67,6 +77,26 @@ $cart_count = getCartCount();
                 </div>
 
                 <div class="header-right">
+                    <?php if (isLoggedIn()): ?>
+                    <!-- Wishlist Icon -->
+                    <div class="cart-icon" style="margin-right: 15px;">
+                        <a href="<?php echo SITE_URL; ?>/wishlist.php" title="Danh sách yêu thích">
+                            <i class="fas fa-heart" style="color: #e74c3c;"></i>
+                            <?php if ($wishlist_count > 0): ?>
+                            <span class="cart-count" style="background: #e74c3c;"><?php echo $wishlist_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </div>
+                    
+                    <!-- Order History Icon -->
+                    <div class="cart-icon" style="margin-right: 15px;">
+                        <a href="<?php echo SITE_URL; ?>/history.php" title="Lịch sử mua hàng">
+                            <i class="fas fa-history" style="color: #90c33c;"></i>
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- Cart Icon -->
                     <div class="cart-icon">
                         <a href="<?php echo SITE_URL; ?>/cart.php">
                             <i class="fas fa-shopping-cart"></i>
@@ -78,22 +108,17 @@ $cart_count = getCartCount();
         </div>
     </header>
 
+    <!-- Navigation -->
     <nav class="navbar">
         <div class="container">
             <ul class="nav-menu">
-                <li><a href="<?php echo SITE_URL; ?>" class="<?php echo $current_page == 'index' ? 'active' : ''; ?>">
-                    <i class="fas fa-home"></i> Trang chủ
-                </a></li>
-                <li><a href="<?php echo SITE_URL; ?>/products.php" class="<?php echo $current_page == 'products' ? 'active' : ''; ?>">
-                    <i class="fas fa-box"></i> Sản phẩm
-                </a></li>
+                <!-- Danh mục (đầu tiên) -->
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle">
                         <i class="fas fa-list"></i> Danh mục <i class="fas fa-chevron-down"></i>
                     </a>
                     <ul class="dropdown-menu">
                         <?php
-                        // Sử dụng hàm getCategories() một lần nữa để lấy danh mục cho menu
                         $categories = getCategories();
                         foreach ($categories as $cat):
                         ?>
@@ -103,12 +128,57 @@ $cart_count = getCartCount();
                         <?php endforeach; ?>
                     </ul>
                 </li>
+                
+                <!-- Trang chủ -->
+                <li><a href="<?php echo SITE_URL; ?>" class="<?php echo $current_page == 'index' ? 'active' : ''; ?>">
+                    <i class="fas fa-home"></i> Trang chủ
+                </a></li>
+                
+                <!-- Sản phẩm -->
+                <li><a href="<?php echo SITE_URL; ?>/products.php" class="<?php echo $current_page == 'products' ? 'active' : ''; ?>">
+                    <i class="fas fa-box"></i> Sản phẩm
+                </a></li>
+                
+                <!-- Tin tức -->
+                <li><a href="<?php echo SITE_URL; ?>/news.php" class="<?php echo $current_page == 'news' ? 'active' : ''; ?>">
+                    <i class="fas fa-newspaper"></i> Tin tức
+                </a></li>
+                
+                <!-- Giới thiệu -->
                 <li><a href="<?php echo SITE_URL; ?>/about.php" class="<?php echo $current_page == 'about' ? 'active' : ''; ?>">
                     <i class="fas fa-info-circle"></i> Giới thiệu
                 </a></li>
+                
+                <!-- Liên hệ -->
                 <li><a href="<?php echo SITE_URL; ?>/contact.php" class="<?php echo $current_page == 'contact' ? 'active' : ''; ?>">
                     <i class="fas fa-envelope"></i> Liên hệ
                 </a></li>
+                
+                <!-- Menu Quản lý (chỉ hiện với Admin) -->
+                <?php if (isAdmin()): ?>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" style="background: rgba(255,255,255,0.1);">
+                        <i class="fas fa-cog"></i> Quản lý <i class="fas fa-chevron-down"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="<?php echo SITE_URL; ?>/admin/index.php">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a></li>
+                        <li><a href="<?php echo SITE_URL; ?>/admin/products.php">
+                            <i class="fas fa-box"></i> Quản lý sản phẩm
+                        </a></li>
+                        <li><a href="<?php echo SITE_URL; ?>/admin/categories.php">
+                            <i class="fas fa-tags"></i> Quản lý danh mục
+                        </a></li>
+                        <li><a href="<?php echo SITE_URL; ?>/admin/orders.php">
+                            <i class="fas fa-shopping-cart"></i> Quản lý đơn hàng
+                        </a></li>
+                        <li><a href="<?php echo SITE_URL; ?>/admin/users.php">
+                            <i class="fas fa-users"></i> Quản lý người dùng
+                        </a></li>
+                    </ul>
+                </li>
+                <?php endif; ?>
             </ul>
             
             <div class="mobile-menu-toggle">
@@ -118,3 +188,6 @@ $cart_count = getCartCount();
     </nav>
 
     <main class="main-content">
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
