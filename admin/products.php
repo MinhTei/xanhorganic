@@ -96,9 +96,6 @@ $categories = getCategories();
             </a>
             <a href="index.php" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Dashboard
-                $image_url = getProductImageUrl($row);
-                ?>
-                <img src="<?php echo $image_url; ?>" 
             </a>
         </div>
         
@@ -186,11 +183,8 @@ $categories = getCategories();
                 <td><?php echo $row['id']; ?></td>
                 <td>
                     <?php
-                    // Hiển thị ảnh sản phẩm
-                    $image_url = SITE_URL . '/assets/images/products/' . ($row['image'] ?? '');
-                    if (empty($row['image']) || !file_exists(__DIR__ . '/../assets/images/products/' . $row['image'])) {
-                        $image_url = 'https://via.placeholder.com/60?text=No+Image';
-                    }
+                    // Use helper to resolve product image URL (tolerant to DB format)
+                    $image_url = getProductImageUrl($row);
                     ?>
                     <img src="<?php echo $image_url; ?>" 
                          alt="<?php echo htmlspecialchars($row['name']); ?>"

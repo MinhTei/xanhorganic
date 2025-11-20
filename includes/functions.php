@@ -136,16 +136,33 @@ function getProductImageUrl($productOrId) {
 
     // Check product image
     $prodImage = $product['image'] ?? '';
+    // If image is present, try multiple resolution strategies to be tolerant
     if (!empty($prodImage)) {
         // If it's a remote URL, return it directly
         if (preg_match('#^https?://#i', $prodImage)) {
             return $prodImage;
         }
+
+        // 1) If DB stored a path relative to assets (e.g. 'images/products/foo.jpg'), try that first
+        if (strpos($prodImage, '/') !== false) {
+            $rawPath = __DIR__ . '/../assets/' . $prodImage;
+            if (file_exists($rawPath)) {
+                // Encode each segment separately to preserve slashes
+                $parts = explode('/', str_replace('\\', '/', $prodImage));
+                $parts = array_map('rawurlencode', $parts);
+                return rtrim(SITE_URL, '/') . '/assets/' . implode('/', $parts);
+            }
+            // If not found, fall back to basename below
+            $prodImage = basename($prodImage);
+        }
+
+        // 2) Try treating it as a filename stored under assets/images/products/
         $prodPath = __DIR__ . '/../assets/images/products/' . $prodImage;
         if (file_exists($prodPath)) {
             return rtrim(SITE_URL, '/') . '/assets/images/products/' . rawurlencode($prodImage);
         }
-        // If not found locally, try using a remote placeholder by product name
+
+        // 3) fallback to Unsplash by product name
         $placeholder_remote = 'https://source.unsplash.com/600x400/?' . urlencode($product['name'] ?? 'product');
         return $placeholder_remote;
     }
@@ -195,11 +212,26 @@ function getCategoryImageUrl($categoryOrId) {
         if (preg_match('#^https?://#i', $img)) {
             return $img;
         }
+
+        // 1) If DB stored a path relative to assets (e.g. 'images/categories/foo.jpg'), try that first
+        if (strpos($img, '/') !== false) {
+            $rawPath = __DIR__ . '/../assets/' . $img;
+            if (file_exists($rawPath)) {
+                $parts = explode('/', str_replace('\\', '/', $img));
+                $parts = array_map('rawurlencode', $parts);
+                return rtrim(SITE_URL, '/') . '/assets/' . implode('/', $parts);
+            }
+            // If not found, fall back to basename
+            $img = basename($img);
+        }
+
+        // 2) Try filename under assets/images/categories/
         $path = __DIR__ . '/../assets/images/categories/' . $img;
         if (file_exists($path)) {
             return rtrim(SITE_URL, '/') . '/assets/images/categories/' . rawurlencode($img);
         }
-        // fallback remote
+
+        // 3) fallback to remote Unsplash
         return 'https://source.unsplash.com/600x400/?' . urlencode($cat['name'] ?? 'category');
     }
 

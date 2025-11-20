@@ -28,11 +28,19 @@ $check_orders->execute();
 $order_count = $check_orders->get_result()->fetch_assoc()['count'];
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_delete'])) {
-    // Xóa ảnh nếu có
+    // Xóa ảnh nếu có (hỗ trợ cả 2 định dạng lưu trong DB)
     if (!empty($product['image'])) {
-        $image_path = __DIR__ . '/../assets/images/products/' . $product['image'];
-        if (file_exists($image_path)) {
-            unlink($image_path);
+        // Try original stored path relative to assets (e.g. 'images/products/foo.jpg')
+        $try1 = __DIR__ . '/../assets/' . $product['image'];
+        if (file_exists($try1)) {
+            @unlink($try1);
+        } else {
+            // Fallback to assets/images/products/<basename>
+            $basename = basename($product['image']);
+            $try2 = __DIR__ . '/../assets/images/products/' . $basename;
+            if (file_exists($try2)) {
+                @unlink($try2);
+            }
         }
     }
     
@@ -81,15 +89,11 @@ require_once '../includes/header.php';
         <div style="display: flex; gap: 30px; align-items: start;">
             <!-- Ảnh sản phẩm -->
             <div style="flex-shrink: 0;">
-                <?php
-                $image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image'] ?? '');
-                $image_path = __DIR__ . '/../assets/images/products/' . ($product['image'] ?? '');
-                
-                if (empty($product['image']) || !file_exists($image_path)) {
-                    $image_url = 'https://via.placeholder.com/200x200?text=' . urlencode($product['name']);
-                }
-                ?>
-                <img src="<?php echo $image_url; ?>" 
+                 <?php
+                 // Use helper to get display URL (handles remote, local, fallback)
+                 $image_url = getProductImageUrl($product);
+                 ?>
+                 <img src="<?php echo $image_url; ?>" 
                      alt="<?php echo safe_html($product['name']); ?>"
                      style="width: 200px; height: 200px; object-fit: cover; border-radius: 10px; border: 2px solid #ddd;">
             </div>

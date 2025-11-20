@@ -52,13 +52,8 @@ if ($product['sale_price']) {
     $discount = round((($product['price'] - $product['sale_price']) / $product['price']) * 100);
 }
 
-// Xử lý hình ảnh sản phẩm
-$image_url = SITE_URL . '/assets/images/products/' . safe_html($product['image'] ?? '');
-$image_path = __DIR__ . '/assets/images/products/' . ($product['image'] ?? '');
-
-if (empty($product['image']) || !file_exists($image_path)) {
-    $image_url = getProductImageUrl($product);
-}
+// Xử lý hình ảnh sản phẩm (dùng helper để chuẩn hóa đường dẫn và fallback)
+$image_url = getProductImageUrl($product);
 ?>
 
 <div class="container">
@@ -247,12 +242,7 @@ if (empty($product['image']) || !file_exists($image_path)) {
             <?php foreach ($related_products as $related): ?>
                 <?php if ($related['id'] != $product_id): ?>
                     <?php
-                        $related_image_url = SITE_URL . '/assets/images/products/' . safe_html($related['image'] ?? '');
-                        $related_image_path = __DIR__ . '/assets/images/products/' . ($related['image'] ?? '');
-                        
-                        if (empty($related['image']) || !file_exists($related_image_path)) {
-                               $related_image_url = getProductImageUrl($related);
-                        }
+                           $related_image_url = getProductImageUrl($related);
                     ?>
                 <div class="product-card">
                     <div class="product-image">

@@ -49,15 +49,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $new_image_name = createSlug($name) . '-' . time() . '.' . $image_extension;
             $upload_path = $upload_dir . $new_image_name;
 
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-                // Xóa ảnh cũ
-                if (!empty($image_name) && file_exists($upload_dir . $image_name)) {
-                    unlink($upload_dir . $image_name);
-                }
-                $image_name = 'images/categories/' . $new_image_name;
-            } else {
-                $error = 'Không thể tải ảnh lên.';
-            }
+                    if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
+                        // Xóa ảnh cũ
+                        if (!empty($image_name) && file_exists($upload_dir . $image_name)) {
+                            @unlink($upload_dir . $image_name);
+                        }
+                        // Lưu TÊN FILE (không lưu đường dẫn) để nhất quán với products
+                        $image_name = $new_image_name;
+                    } else {
+                        $error = 'Không thể tải ảnh lên.';
+                    }
         } else {
             $error = 'Định dạng ảnh không hợp lệ hoặc dung lượng quá lớn (tối đa 5MB).';
         }
@@ -124,16 +125,12 @@ require_once '../includes/header.php';
                 <div style="margin-bottom: 15px;">
                     <p style="color: #666; margin-bottom: 10px;">Ảnh hiện tại:</p>
                     <?php
-                    $current_image = SITE_URL . '/assets/' . safe_html($category['image']);
-                    $image_path = __DIR__ . '/../assets/' . $category['image'];
-                    
-                    if (!file_exists($image_path)) {
-                        $current_image = 'https://via.placeholder.com/200?text=No+Image';
-                    }
+                    // Hiển thị ảnh hiện tại sử dụng helper để đảm bảo đường dẫn chuẩn
+                    $current_image = getCategoryImageUrl($category);
                     ?>
                     <img src="<?php echo $current_image; ?>" 
-                         alt="<?php echo safe_html($category['name']); ?>"
-                         style="max-width: 200px; height: auto; border-radius: 5px; border: 2px solid #ddd;">
+                        alt="<?php echo safe_html($category['name']); ?>"
+                        style="max-width: 200px; height: auto; border-radius: 5px; border: 2px solid #ddd;">
                 </div>
                 <?php endif; ?>
                 

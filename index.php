@@ -272,13 +272,8 @@ $categories = getCategories();
                     
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
                         <?php
-                        $image_url = 'https://via.placeholder.com/300x250?text=' . urlencode($product['name']);
-                        if (!empty($product['image'])) {
-                            $image_path = __DIR__ . '/assets/' . $product['image'];
-                            if (file_exists($image_path)) {
-                                $image_url = SITE_URL . '/assets/' . safe_html($product['image']);
-                            }
-                        }
+                        // Use helper to resolve product image (tolerant to DB formats)
+                        $image_url = getProductImageUrl($product);
                         ?>
                         <img src="<?php echo $image_url; ?>" alt="<?php echo safe_html($product['name']); ?>">
                     </a>

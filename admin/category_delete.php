@@ -34,11 +34,17 @@ if ($product_count > 0) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_delete'])) {
-    // Xóa ảnh nếu có
+    // Xóa ảnh nếu có (hỗ trợ cả 2 định dạng lưu trong DB)
     if (!empty($category['image'])) {
-        $image_path = __DIR__ . '/../assets/' . $category['image'];
-        if (file_exists($image_path)) {
-            unlink($image_path);
+        $try1 = __DIR__ . '/../assets/' . $category['image'];
+        if (file_exists($try1)) {
+            @unlink($try1);
+        } else {
+            $basename = basename($category['image']);
+            $try2 = __DIR__ . '/../assets/images/categories/' . $basename;
+            if (file_exists($try2)) {
+                @unlink($try2);
+            }
         }
     }
     
@@ -71,15 +77,10 @@ require_once '../includes/header.php';
         <div style="display: flex; gap: 30px; align-items: start;">
             <!-- Ảnh danh mục -->
             <div style="flex-shrink: 0;">
-                <?php
-                $image_url = SITE_URL . '/assets/' . safe_html($category['image'] ?? '');
-                $image_path = __DIR__ . '/../assets/' . ($category['image'] ?? '');
-                
-                if (empty($category['image']) || !file_exists($image_path)) {
-                    $image_url = 'https://via.placeholder.com/200x200?text=' . urlencode($category['name']);
-                }
-                ?>
-                <img src="<?php echo $image_url; ?>" 
+                 <?php
+                 $image_url = getCategoryImageUrl($category);
+                 ?>
+                 <img src="<?php echo $image_url; ?>" 
                      alt="<?php echo safe_html($category['name']); ?>"
                      style="width: 200px; height: 200px; object-fit: cover; border-radius: 10px; border: 2px solid #ddd;">
             </div>

@@ -21,29 +21,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error = 'Vui lòng điền tên danh mục.';
     }
 
-    // Image upload handling
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    // Image upload handling (robust, same approach as products)
+    if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         $max_size = 5 * 1024 * 1024; // 5MB
+        $allowed_exts = ['jpg','jpeg','png','gif','webp'];
 
-        if (in_array($_FILES['image']['type'], $allowed_types) && $_FILES['image']['size'] <= $max_size) {
-            // Create a directory if it doesn't exist
-            $upload_dir = __DIR__ . '/../assets/images/categories/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            
-            // Generate a unique name for the image
-            $image_extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-            $image_name = createSlug($name) . '-' . time() . '.' . $image_extension;
-            $upload_path = $upload_dir . $image_name;
-
-            if (!move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-                $error = 'Không thể tải ảnh lên. Vui lòng kiểm tra quyền ghi của thư mục.';
-                $image_name = ''; // Reset image name on failure
-            }
+        if ($_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            $error = 'Lỗi tải file (code: ' . $_FILES['image']['error'] . ').';
+        } elseif ($_FILES['image']['size'] > $max_size) {
+            $error = 'Dung lượng ảnh quá lớn. Vui lòng chọn file <= 5MB.';
         } else {
-            $error = 'Định dạng ảnh không hợp lệ hoặc dung lượng quá lớn (tối đa 5MB).';
+            $tmp = $_FILES['image']['tmp_name'];
+            $origName = $_FILES['image']['name'];
+            $info = @getimagesize($tmp);
+            if ($info === false) {
+                $error = 'Tệp không phải là ảnh hợp lệ.';
+            } else {
+                $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                if (!in_array($ext, $allowed_exts, true)) {
+                    $error = 'Định dạng ảnh không được hỗ trợ.';
+                } else {
+                    $new_image_name = createSlug($name ?: 'category') . '-' . time() . '-' . bin2hex(random_bytes(5)) . '.' . $ext;
+                    $upload_dir = __DIR__ . '/../assets/images/categories/';
+                    if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+                    $upload_path = $upload_dir . $new_image_name;
+
+                    if (move_uploaded_file($tmp, $upload_path)) {
+                        @chmod($upload_path, 0644);
+                        $image_name = $new_image_name;
+                    } else {
+                        $error = 'Không thể lưu file ảnh lên server. Vui lòng kiểm tra quyền ghi.';
+                    }
+                }
+            }
         }
     }
 

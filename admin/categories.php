@@ -64,17 +64,12 @@ require_once '../includes/header.php';
                 <td><?php echo $cat['id']; ?></td>
                 <td>
                     <?php
-                    // Xử lý hiển thị ảnh danh mục
-                    $image_url = SITE_URL . '/assets/' . safe_html($cat['image'] ?? '');
-                    $image_path = __DIR__ . '/../assets/' . ($cat['image'] ?? '');
-                    
-                    if (empty($cat['image']) || !file_exists($image_path)) {
-                        $image_url = 'https://via.placeholder.com/80?text=' . urlencode($cat['name']);
-                    }
+                    // Use helper to resolve category image (handles both DB formats)
+                    $image_url = getCategoryImageUrl($cat);
                     ?>
                     <img src="<?php echo $image_url; ?>" 
-                         alt="<?php echo safe_html($cat['name']); ?>"
-                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px;">
+                        alt="<?php echo safe_html($cat['name']); ?>"
+                        style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px;">
                 </td>
                 <td>
                     <strong><?php echo safe_html($cat['name']); ?></strong>
