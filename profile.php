@@ -78,8 +78,8 @@ $orders = $orders_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     <div style="width: 100px; height: 100px; margin: 0 auto 15px; background: linear-gradient(135deg, #2d5016, #90c33c); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white;">
                         <?php echo strtoupper(substr($user['full_name'], 0, 1)); ?>
                     </div>
-                    <h3 style="color: #2d5016; margin-bottom: 5px;"><?php echo htmlspecialchars($user['full_name']); ?></h3>
-                    <p style="color: #666; font-size: 14px;"><?php echo htmlspecialchars($user['email']); ?></p>
+                    <h3 style="color: #2d5016; margin-bottom: 5px;"><?php echo safe_html($user['full_name']); ?></h3>
+                    <p style="color: #666; font-size: 14px;"><?php echo safe_html($user['email']); ?></p>
                 </div>
                 
                 <nav style="list-style: none; padding: 0;">
@@ -118,12 +118,12 @@ $orders = $orders_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     <div class="form-group">
                         <label for="full_name">Họ và tên</label>
                         <input type="text" id="full_name" name="full_name" required
-                               value="<?php echo htmlspecialchars($user['full_name']); ?>">
+                               value="<?php echo safe_html($user['full_name']); ?>">
                     </div>
                     
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" value="<?php echo htmlspecialchars($user['email']); ?>" disabled
+                        <input type="email" id="email" value="<?php echo safe_html($user['email']); ?>" disabled
                                style="background: #f8f9fa; cursor: not-allowed;">
                         <small style="color: #666; font-size: 13px;">Email không thể thay đổi</small>
                     </div>
@@ -131,12 +131,12 @@ $orders = $orders_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     <div class="form-group">
                         <label for="phone">Số điện thoại</label>
                         <input type="tel" id="phone" name="phone"
-                               value="<?php echo htmlspecialchars($user['phone']); ?>">
+                               value="<?php echo safe_html($user['phone']); ?>">
                     </div>
                     
                     <div class="form-group">
                         <label for="address">Địa chỉ</label>
-                        <textarea id="address" name="address" rows="3"><?php echo htmlspecialchars($user['address']); ?></textarea>
+                        <textarea id="address" name="address" rows="3"><?php echo safe_html($user['address']); ?></textarea>
                     </div>
                     
                     <button type="submit" name="update_profile" class="btn-submit">

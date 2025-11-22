@@ -191,3 +191,7 @@ $wishlist_count = isLoggedIn() ? getWishlistCount() : 0;
     
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
+    <script>
+        // Khai báo duy nhất biến SITE_URL cho toàn bộ JS
+        window.SITE_URL = "<?php echo SITE_URL; ?>";
+    </script>

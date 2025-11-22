@@ -13,6 +13,7 @@
 require_once 'includes/header.php';
 
 // Lấy tham số lọc
+// Lấy tham số lọc
 $category_id = isset($_GET['category']) ? (int)$_GET['category'] : 0;
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
@@ -26,16 +27,34 @@ if ($category_id > 0) {
     $where[] = "p.category_id = ?";
     $params[] = $category_id;
     $types .= "i";
+    if ($search) {
+        // Nếu từ khóa trong dấu ngoặc kép, tìm chính xác tên sản phẩm
+        if (preg_match('/^"(.+)"$/', $search, $matches)) {
+            $where[] = "p.name = ?";
+            $params[] = $matches[1];
+            $types .= "s";
+        } else {
+            $where[] = "p.name LIKE ?";
+            $search_term = "%$search%";
+            $params[] = $search_term;
+            $types .= "s";
+        }
+    }
+} else {
+    if ($search) {
+        // Nếu từ khóa trong dấu ngoặc kép, tìm chính xác tên sản phẩm
+        if (preg_match('/^"(.+)"$/', $search, $matches)) {
+            $where[] = "p.name = ?";
+            $params[] = $matches[1];
+            $types .= "s";
+        } else {
+            $where[] = "p.name LIKE ?";
+            $search_term = "%$search%";
+            $params[] = $search_term;
+            $types .= "s";
+        }
+    }
 }
-
-if ($search) {
-    $where[] = "(p.name LIKE ? OR p.description LIKE ?)";
-    $search_term = "%$search%";
-    $params[] = $search_term;
-    $params[] = $search_term;
-    $types .= "ss";
-}
-
 $where_clause = implode(" AND ", $where);
 
 // Sắp xếp
@@ -58,6 +77,7 @@ $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $per_page;
 
 // Đếm tổng sản phẩm
+
 $count_sql = "SELECT COUNT(*) as total FROM products p WHERE $where_clause";
 $count_stmt = $conn->prepare($count_sql);
 if ($params) {
@@ -125,10 +145,7 @@ if ($category_id > 0) {
 <div class="container">
     <div class="filters-section">
         <form method="GET" action="" class="filters-content">
-            <?php if ($search): ?>
-                <input type="hidden" name="search" value="<?php echo safe_html($search); ?>">
-            <?php endif; ?>
-            
+            <!-- Chỉ giữ lại bộ lọc danh mục và sắp xếp, bỏ ô tìm kiếm nhỏ -->
             <div class="filter-group">
                 <label>Danh mục:</label>
                 <select name="category" onchange="this.form.submit()">
@@ -143,7 +160,6 @@ if ($category_id > 0) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            
             <div class="filter-group">
                 <label>Sắp xếp:</label>
                 <select name="sort" onchange="this.form.submit()">

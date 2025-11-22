@@ -2,8 +2,10 @@
  * MAIN.JS - JavaScript chính cho website Xanh Organic
  */
 
-// Lấy SITE_URL động từ PHP (nếu có), fallback về gốc
-const SITE_URL = window.SITE_URL || '';
+// Sử dụng window.SITE_URL đã được gán từ header.php (không khai báo lại nếu đã có)
+if (typeof SITE_URL === 'undefined') {
+    var SITE_URL = window.SITE_URL;
+}
 
 // ===== TOAST NOTIFICATION SYSTEM =====
 function showToast(type, title, message, duration = 3000) {

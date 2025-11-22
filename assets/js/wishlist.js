@@ -2,8 +2,10 @@
  * WISHLIST.JS - Xử lý tính năng yêu thích sản phẩm
  */
 
-// Lấy SITE_URL động từ PHP (nếu có), fallback về gốc
-const SITE_URL = window.SITE_URL || '';
+// Sử dụng window.SITE_URL đã được gán từ header.php (không khai báo lại nếu đã có)
+if (typeof SITE_URL === 'undefined') {
+    var SITE_URL = window.SITE_URL;
+}
 
 /**
  * Toggle wishlist (Thêm/Xóa sản phẩm yêu thích)
