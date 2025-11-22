@@ -2,7 +2,8 @@
  * WISHLIST.JS - Xử lý tính năng yêu thích sản phẩm
  */
 
-const SITE_URL = window.location.origin + '/xanhorganic';
+// Lấy SITE_URL động từ PHP (nếu có), fallback về gốc
+const SITE_URL = window.SITE_URL || '';
 
 /**
  * Toggle wishlist (Thêm/Xóa sản phẩm yêu thích)

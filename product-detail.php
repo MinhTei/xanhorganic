@@ -97,7 +97,13 @@ $image_url = getProductImageUrl($product);
                         -<?php echo $discount; ?>%
                     </span>
                 <?php endif; ?>
-                
+                <!-- Nút wishlist (trái tim) trên trang chi tiết sản phẩm -->
+                <button class="btn-wishlist<?php echo (isLoggedIn() && isInWishlist($product['id'])) ? ' active' : ''; ?>" 
+                    onclick="toggleWishlist(<?php echo $product['id']; ?>, this)" 
+                    title="Thêm vào yêu thích"
+                    style="position: absolute; top: 20px; right: 20px; z-index: 20; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                    <i class="fas fa-heart"></i>
+                </button>
                 <img src="<?php echo $image_url; ?>" 
                      alt="<?php echo safe_html($product['name']); ?>"
                      style="width: 100%; height: 500px; object-fit: cover;">

@@ -179,6 +179,12 @@ if ($category_id > 0) {
                             -<?php echo round((($product['price'] - $product['sale_price']) / $product['price']) * 100); ?>%
                         </span>
                     <?php endif; ?>
+                    <!-- Nút wishlist (trái tim) luôn hiển thị -->
+                    <button class="btn-wishlist<?php echo (isLoggedIn() && isInWishlist($product['id'])) ? ' active' : ''; ?>" 
+                        onclick="toggleWishlist(<?php echo $product['id']; ?>, this)" 
+                        title="Thêm vào yêu thích">
+                        <i class="fas fa-heart"></i>
+                    </button>
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
                         <img src="<?php echo $image_url; ?>" 
                              alt="<?php echo safe_html($product['name']); ?>">

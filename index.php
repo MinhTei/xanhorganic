@@ -183,13 +183,12 @@ $categories = getCategories();
                     <?php endif; ?>
                     
                     <!-- Nút wishlist -->
-                    <?php if (isLoggedIn()): ?>
-                    <button class="btn-wishlist <?php echo isInWishlist($product['id']) ? 'active' : ''; ?>" 
-                            onclick="toggleWishlist(<?php echo $product['id']; ?>, this)"
+                        <!-- Nút wishlist (trái tim) luôn hiển thị -->
+                        <button class="btn-wishlist<?php echo (isLoggedIn() && isInWishlist($product['id'])) ? ' active' : ''; ?>" 
+                            onclick="toggleWishlist(<?php echo $product['id']; ?>, this)" 
                             title="Thêm vào yêu thích">
-                        <i class="fas fa-heart"></i>
-                    </button>
-                    <?php endif; ?>
+                            <i class="fas fa-heart"></i>
+                        </button>
                     
                     <a href="<?php echo SITE_URL; ?>/product-detail.php?id=<?php echo $product['id']; ?>">
                         <?php $image_url = getProductImageUrl($product); ?>
@@ -488,6 +487,7 @@ $categories = getCategories();
     </div>
 </section>
 
+<script src="<?php echo SITE_URL; ?>/assets/js/main.js"></script>
 <script src="<?php echo SITE_URL; ?>/assets/js/wishlist.js"></script>
 <script>
 // Slideshow Script

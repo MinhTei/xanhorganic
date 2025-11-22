@@ -76,7 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         if (!empty($image_name) && $image_name !== $new_image_name && file_exists(__DIR__ . '/../assets/images/products/' . $image_name)) {
                             @unlink(__DIR__ . '/../assets/images/products/' . $image_name);
                         }
-                        $image_name = $new_image_name; // Cập nhật tên ảnh mới
+                            // Lưu tên file vào DB
+                            $image_name = $new_image_name;
                     } else {
                         $error = 'Không thể lưu file ảnh lên server. Vui lòng kiểm tra quyền ghi.';
                     }

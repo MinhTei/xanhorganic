@@ -82,6 +82,18 @@ if (!defined('SITE_URL')) {
         <i class="fas fa-arrow-up"></i>
     </button>
 
-    <script src="<?php echo SITE_URL; ?>/assets/js/main.js"></script>
+</body>
+<script>
+// Truyền SITE_URL từ PHP sang JS để dùng đúng mọi cấu hình thư mục
+window.SITE_URL = '<?php echo SITE_URL; ?>';
+</script>
+<script src="<?php echo SITE_URL; ?>/assets/js/main.js"></script>
+<script src="<?php echo SITE_URL; ?>/assets/js/wishlist.js"></script>
+</html>
+</body>
+<!-- Đảm bảo main.js được load trước wishlist.js để showToast hoạt động -->
+<script src="<?php echo SITE_URL; ?>/assets/js/main.js"></script>
+<script src="<?php echo SITE_URL; ?>/assets/js/wishlist.js"></script>
+</html>
 </body>
 </html>

@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $featured = isset($_POST['featured']) ? 1 : 0;
     $certification = trim($_POST['certification']);
     $origin = trim($_POST['origin']);
-    $image_name = '';
+        $image_name = '';
 
     // Validate data
     if (empty($name) || empty($price) || empty($category_id) || empty($unit)) {
@@ -61,9 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     if (!move_uploaded_file($tmp, $upload_path)) {
                         $error = 'Không thể lưu file ảnh lên server. Vui lòng kiểm tra quyền ghi.';
-                        $image_name = '';
+                            $image_name = '';
                     } else {
                         @chmod($upload_path, 0644);
+                            // Lưu tên file vào DB
+                            // $image_name đã có giá trị đúng
                     }
                 }
             }
@@ -87,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $featured,
             $certification,
             $origin,
-            $image_name
+                $image_name // Lưu tên file
         );
 
         if ($stmt->execute()) {
