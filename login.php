@@ -70,10 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 // ===== LOGIC REDIRECT THEO ROLE =====
                 if ($user['role'] === 'admin') {
-                    // Admin -> Redirect đến trang quản trị
+                
                     redirect('admin/index.php');
                 } else {
-                    // Customer -> Redirect đến trang được yêu cầu hoặc trang chủ
+                    
                     if (isset($_GET['redirect'])) {
                         redirect($_GET['redirect']);
                     } else {

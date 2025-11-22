@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $featured = isset($_POST['featured']) ? 1 : 0;
     $certification = trim($_POST['certification']);
     $origin = trim($_POST['origin']);
-        $image_name = '';
+    $image_name = '';
 
     // Validate data
     if (empty($name) || empty($price) || empty($category_id) || empty($unit)) {
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (!in_array($ext, $allowed_exts, true)) {
                     $error = 'Định dạng ảnh không được hỗ trợ.';
                 } else {
-                    // Generate a safe unique filename
+                    
                     $image_name = createSlug($name ?: 'product') . '-' . time() . '-' . bin2hex(random_bytes(5)) . '.' . $ext;
                     $upload_dir = __DIR__ . '/../assets/images/products/';
                     if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
@@ -64,8 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             $image_name = '';
                     } else {
                         @chmod($upload_path, 0644);
-                            // Lưu tên file vào DB
-                            // $image_name đã có giá trị đúng
+                          
                     }
                 }
             }
@@ -89,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $featured,
             $certification,
             $origin,
-                $image_name // Lưu tên file
+            $image_name 
         );
 
         if ($stmt->execute()) {
