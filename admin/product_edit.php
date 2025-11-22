@@ -152,17 +152,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <div class="form-group">
                 <label for="description">Mô tả</label>
-                <textarea id="description" name="description" rows="5"><?php echo htmlspecialchars($product['description']); ?></textarea>
+                <textarea id="description" name="description" rows="5"><?php echo htmlspecialchars($product['description'] ?? ''); ?></textarea>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
                     <label for="price">Giá gốc (VNĐ) <span style="color: red;">*</span></label>
-                    <input type="number" id="price" name="price" required step="1000" value="<?php echo htmlspecialchars($product['price']); ?>">
+                    <input type="number" id="price" name="price" required step="1000" value="<?php echo htmlspecialchars($product['price'] ?? ''); ?>">
                 </div>
                 <div class="form-group">
                     <label for="sale_price">Giá khuyến mãi (VNĐ)</label>
-                    <input type="number" id="sale_price" name="sale_price" step="1000" value="<?php echo htmlspecialchars($product['sale_price']); ?>">
+                    <input type="number" id="sale_price" name="sale_price" step="1000" value="<?php echo htmlspecialchars($product['sale_price'] ?? ''); ?>">
                 </div>
             </div>
 
@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 <div class="form-group">
                     <label for="stock">Tồn kho</label>
-                    <input type="number" id="stock" name="stock" value="<?php echo htmlspecialchars($product['stock']); ?>">
+                    <input type="number" id="stock" name="stock" value="<?php echo htmlspecialchars($product['stock'] ?? ''); ?>">
                 </div>
             </div>
             
@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 <div class="form-group">
                     <label for="origin">Xuất xứ</label>
-                    <input type="text" id="origin" name="origin" placeholder="Vd: Đà Lạt, Việt Nam" value="<?php echo htmlspecialchars($product['origin']); ?>">
+                    <input type="text" id="origin" name="origin" placeholder="Vd: Đà Lạt, Việt Nam" value="<?php echo htmlspecialchars($product['origin'] ?? ''); ?>">
                 </div>
             </div>
 
